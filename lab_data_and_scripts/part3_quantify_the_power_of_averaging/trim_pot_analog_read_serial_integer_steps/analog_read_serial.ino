@@ -25,6 +25,10 @@ void loop() {
   delay(1);  // delay in between reads for stability
 }
 
+
+
+
+
 // Post-Class Notes
 // Trim Pot maxV: 1018 minV: 55 (not in units of volts)
-// nmid = (nmin + nmax)/2 = 536.5
+// nmid = (nmin + nmax)/2 = 500ish
