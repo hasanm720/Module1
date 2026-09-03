@@ -1,0 +1,8 @@
+What is the period, amplitude and duty-cycle of the PWM as a function of voltage? 
+
+Period: 2ms
+Amplitude: 2.5V
+Duty Cycle: (Vsensor)/(Vmax)
+
+PWM 255 steps/possible widths
+Arduino sensor value range: 1026
