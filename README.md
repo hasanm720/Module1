@@ -2,8 +2,11 @@
 
 PHYS39 Module 1 — Instrumentation team repository.
 
-**Team members:** _[TEAM MEMBER 1 NAME]_, _[TEAM MEMBER 2 NAME]_
-**Team repository:** _[TEAM REPOSITORY URL]_
+### Team members
+Kyle Chen, Muhammad Hasan
+
+### Team repository
+https://github.com/hasanm720/Module1/tree/mainv2
 
 ## Module 1 sketches (`code/module1/`)
 
