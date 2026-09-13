@@ -11,7 +11,7 @@ Repository: [hasanm720/Module1 — `mainv2`](https://github.com/hasanm720/Module
 ---
 
 ## 1. Apparatus and Experimental Setup
-![alt text](image.png)
+![alt text](docs/images/module1/P2_analog_read_serial/analog_read_serial_ciruit_photo.png)
 
 ### P2 — Analog input / serial measurement apparatus
 
@@ -19,33 +19,34 @@ The analog-read experiment uses an Arduino Uno with a potentiometer connected to
 
 ![P2 analog-read circuit photograph](../images/module1/P2_analog_read_serial/analog_read_serial_ciruit_photo.png)
 
+
+
 *Figure 1. Analog-read/serial apparatus photograph. The photograph shows the Arduino Uno, breadboard, potentiometer, jumper wiring, and USB connection used for the A0 analog-input measurement.*
 
 The corresponding computer-side evidence shows the Arduino IDE/Serial Monitor and Serial Plotter receiving the ADC readings. The Serial Monitor reports individual samples, while the Serial Plotter provides a graphical view of the measured values.
 
-![P2 serial monitor and serial plotter](../images/module1/P2_analog_read_serial/serial_monitor_and_terminal_screenshot.png)
 
-![alt text](serial_monitor_and_terminal_screenshot-1.png)
 
+![alt text](docs/images/module1/P2_analog_read_serial/serial_monitor_and_terminal_screenshot.png)
 *Figure 2. Serial Monitor and Serial Plotter evidence. The Serial Monitor shows repeated integer ADC readings, while the Serial Plotter displays those readings as a time-varying trace.*
 
-### P3 — Trim-pot averaging apparatus
+### Part 3 — Trim-pot averaging apparatus
 
 For the averaging experiments, the potentiometer was used to hold the input near a fixed voltage while repeated ADC conversions were collected. The circuit photograph below documents the trim-pot setup.
 
-![P3 trim-pot circuit](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_circuit.PNG)
 
-
-
+![alt text](docs/images/module1/P3_quantify_the_power_of_averaging/trim_pot_circuit.PNG)
 *Figure 3. Trim-pot circuit used for the averaging measurements. The photograph shows the trim potentiometer wired to the Arduino analog-input circuit.*
+
 
 The repository also contains a serial-plotter capture of the trim-pot being adjusted through a range of voltages. This demonstrates the ADC's discrete output levels as the potentiometer is changed.
 
-![P3 trim-pot analog voltage steps](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png)
+
+![alt text](docs/images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png)
 
 *Figure 4. Trim-pot voltage sweep. The Serial Plotter shows the voltage decreasing in small discrete steps as the potentiometer is adjusted, illustrating ADC quantization.*
 
-### P4 — LED PWM apparatus
+### Part 4 — LED PWM apparatus
 
 The final experiment maps an averaged analog input to PWM output on the Arduino. The sketch uses the potentiometer on A0 and PWM output pin 9. The two circuit photographs document the high-duty-cycle and low-duty-cycle configurations.
 
@@ -63,18 +64,18 @@ The final experiment maps an averaged analog input to PWM output on the Arduino.
 
 The experiment is split into focused sketches. Each link below opens the exact Arduino file stored in the repository; the code itself is not pasted into this evidence note.
 
-### P1 — Blink
+### Part 1 — Blink
 
 - [`P1_Blink.ino`](../../code/module1/P1_Blink/P1_Blink.ino) — basic LED blink demonstration.
 - The sketch sets `LED_BUILTIN` as an output and alternates the LED between HIGH and LOW with 1000 ms delays. This produces approximately a 2 s period and demonstrates basic digital output timing.
 
-### P2 — Analog read and serial output
+### Part 2 — Analog read and serial output
 
 - [`P2_analog_read_serial.ino`](../../code/module1/P2_analog_read_serial/P2_analog_read_serial.ino) — reads A0 with `analogRead()` and prints the raw ADC result at 9600 baud.
 - The sketch includes a 1 ms delay between readings for stability.
 - The post-class notes in the sketch record the observed ADC minimum and maximum as 55 and 1018, respectively.
 
-### P3 — Averaging and resolution
+### Part 3 — Averaging and resolution
 
 - [`3a_analog_read_serial.ino`](../../code/module1/P3_averaging_vs_unaveraging/3a_analog_read_serial/3a_analog_read_serial.ino) — raw ADC sampling.
 - [`3b_trim_pot_analog_read_serial.ino`](../../code/module1/P3_averaging_vs_unaveraging/3b_trim_pot_analog_read_serial/3b_trim_pot_analog_read_serial.ino) — converts the raw ADC value to voltage using a 5.00 V reference.
@@ -82,13 +83,13 @@ The experiment is split into focused sketches. Each link below opens the exact A
 - [`3c_trim_pot_average_vs_unaveraged.ino`](../../code/module1/P3_averaging_vs_unaveraging/3c/3c_trim_pot_average_vs_unaveraged.ino) — produces sequential unaveraged and N = 1000 averaged voltage samples for Serial Plotter comparison.
 - [`3d_trim_pot_micros.ino`](../../code/module1/P3_averaging_vs_unaveraging/3d_trim_pot_micros/3d_trim_pot_micros.ino) — measures the elapsed time for 1000 `analogRead()` conversions using `micros()` and calculates conversions per second and time per conversion.
 
-### P4 — Averaged input to PWM
+### Part 4 — Averaged input to PWM
 
 - [`P4_trim_pot_DutyCycle.ino`](../../code/module1/P4_trim_pot_DutyCycle/P4_trim_pot_DutyCycle.ino) — averages 1000 A0 readings, converts the average to voltage, maps the ADC result to a PWM value, outputs PWM on pin 9, and reports the average ADC, voltage, and PWM value over Serial.
 
 ---
 
-# 3. P1 — Blink
+# 3. Part 1 — Blink
 
 The P1 sketch is the introductory digital-output experiment. `LED_BUILTIN` is configured as an output. The loop writes the output HIGH, waits 1 s, writes it LOW, and waits another 1 s. Therefore, each complete on/off cycle is approximately 2 s, corresponding to a frequency of approximately 0.50 Hz and a duty cycle of approximately 50%.
 
@@ -98,7 +99,7 @@ The purpose of P1 is to establish the basic relationship between software timing
 
 ---
 
-# 4. P2 — ADC Digitization
+# 4. Part 2 — ADC Digitization
 
 ## 4.1 Measurement procedure
 
