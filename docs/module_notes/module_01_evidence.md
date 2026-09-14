@@ -6,7 +6,7 @@ Team members: Kyle Chen and Muhammad Hasan
 Date: September 9, 2026  
 Repository: [hasanm720/Module1 — `mainv2`](https://github.com/hasanm720/Module1/tree/mainv2)
 
-> **Submission note:** This evidence note is organized to match the Module 1 checklist. The Arduino sketches are linked rather than pasted, and the evidence images are referenced directly from `../images/module1/`. Additional team-member names can be added to the header if applicable.
+
 
 ---
 
@@ -70,31 +70,30 @@ The experiment is split into focused sketches. Each link below opens the exact A
 ### Part 1 — Blink
 
 
-
-- [Part1_Blink.ino](code/module1/P1_Blink/P1_Blink.ino) — basic LED blink demonstration.
+- [Part1_Blink.ino](../../code/module1/P1_Blink/P1_Blink.ino) — basic LED blink demonstration.
 - The sketch sets `LED_BUILTIN` as an output and alternates the LED between HIGH and LOW with 1000 ms delays. This produces approximately a 2 s period and demonstrates basic digital output timing.
 
 ### Part 2 — Analog read and serial output
 
-- [Part2_analog_read_serial.ino](code/module1/P2_analog_read_serial/P2_analog_read_serial.ino) — reads A0 with `analogRead()` and prints the raw ADC result at 9600 baud.
+- [Part2_analog_read_serial.ino](../../code/module1/P2_analog_read_serial/P2_analog_read_serial.ino) — reads A0 with `analogRead()` and prints the raw ADC result at 9600 baud.
 - The sketch includes a 1 ms delay between readings for stability.
 - The post-class notes in the sketch record the observed ADC minimum and maximum as 55 and 1018, respectively.
 
 ### Part 3 — Averaging and resolution
 
 
-- [Part3a_analog_read_serial.ino](code/module1/P3_averaging_vs_unaveraging/3a_analog_read_serial/3a_analog_read_serial.ino) — raw ADC sampling.
-- [Part3b_trim_pot_analog_read_serial.ino](code/module1/P3_averaging_vs_unaveraging/3b_trim_pot_analog_read_serial/3b_trim_pot_analog_read_serial.ino)
+- [Part3a_analog_read_serial.ino](../../code/module1/P3_averaging_vs_unaveraging/3a_analog_read_serial/3a_analog_read_serial.ino) — raw ADC sampling.
+- [Part3b_trim_pot_analog_read_serial.ino](../../code/module1/P3_averaging_vs_unaveraging/3b_trim_pot_analog_read_serial/3b_trim_pot_analog_read_serial.ino)
  — converts the raw ADC value to voltage using a 5.00 V reference
 
-- [Part3c_trim_pot_STDEV.ino](code/module1/P3_averaging_vs_unaveraging/3c_STDEV/3c_STDEV.ino)
+- [Part3c_trim_pot_STDEV.ino](../../code/module1/P3_averaging_vs_unaveraging/3c_STDEV/3c_STDEV.ino)
  — collects 100 unaveraged values and 100 values averaged over 1000 ADC conversions, then calculates the means and sample standard deviations.
 
-- [Part3d_trim_pot_micros.ino](code/module1/P3_averaging_vs_unaveraging/3d_trim_pot_micros/3d_trim_pot_micros.ino) — measures the elapsed time for 1000 `analogRead()` conversions using `micros()` and calculates conversions per second and time per conversion.
+- [Part3d_trim_pot_micros.ino](../../code/module1/P3_averaging_vs_unaveraging/3d_trim_pot_micros/3d_trim_pot_micros.ino) — measures the elapsed time for 1000 `analogRead()` conversions using `micros()` and calculates conversions per second and time per conversion.
 
 ### Part 4 — Averaged input to PWM
 
-- [Part4_trim_pot_DutyCycle.ino](code/module1/P4_trim_pot_DutyCycle/P4_trim_pot_DutyCycle.ino)
+- [Part4_trim_pot_DutyCycle.ino](../../code/module1/P4_trim_pot_DutyCycle/P4_trim_pot_DutyCycle.ino)
  — averages 1000 A0 readings, converts the average to voltage, maps the ADC result to a PWM value, outputs PWM on pin 9, and reports the average ADC, voltage, and PWM value over Serial.
 
 ---
@@ -105,7 +104,7 @@ The Part 1 sketch is the introductory digital-output experiment. `LED_BUILTIN` i
 
 The purpose of Part 1 is to establish the basic relationship between software timing and a measurable electrical/digital output before moving to analog measurement and PWM.
 
-**Code:** [Part1_Blink.ino](code/module1/P1_Blink/P1_Blink.ino)
+**Code:** [Part1_Blink.ino](../../code/module1/P1_Blink/P1_Blink.ino)
 
 ---
 
@@ -115,64 +114,64 @@ The purpose of Part 1 is to establish the basic relationship between software ti
 
 The Part 2 sketch repeatedly executes `analogRead(A0)` and prints the raw ADC number. The input is supplied by the potentiometer, whose wiper is connected to A0. The sketch uses a 9600-baud serial connection and a 1 ms delay between readings.
 
-**Code:** [Part2_analog_read_serial.ino](code/module1/P2_analog_read_serial/P2_analog_read_serial.ino)
+**Code:** [Part2_analog_read_serial.ino](../../code/module1/P2_analog_read_serial/P2_analog_read_serial.ino)
 
 The recorded post-class ADC range is:
 
 | Quantity | Measured ADC value |
 |---|---:|
-| Minimum, \(n_\min\) | 55 |
-| Maximum, \(n_\max\) | 1018 |
-| Midrange, \(n_\mathrm{mid}\) | 536.5 |
+| Minimum, $n_{\min}$ | 55 |
+| Maximum, $n_{\max}$ | 1018 |
+| Midrange, $n_{\mathrm{mid}}$ | 536.5 |
 
 The midrange is calculated from
 
-\[
-n_\mathrm{mid}=\frac{n_\min+n_\max}{2}
+$$
+n_{\mathrm{mid}}=\frac{n_{\min}+n_{\max}}{2}
 =\frac{55+1018}{2}
 =536.5.
-\]
+$$
 
 ## 4.2 One-count voltage resolution
 
 For a 10-bit Arduino ADC there are 1024 possible integer output codes, from 0 through 1023. With a 5.00 V reference, the voltage represented by one ADC count is
 
-\[
-\Delta V_\mathrm{1\,count}
-=\frac{V_\mathrm{ref}}{1023}
+$$
+\Delta V_{\mathrm{1\,count}}
+=\frac{V_{\mathrm{ref}}}{1023}
 =\frac{5.00\ \mathrm{V}}{1023}
 \approx 0.004888\ \mathrm{V}.
-\]
+$$
 
 Thus,
 
-\[
-\boxed{\Delta V_\mathrm{1\,count}\approx4.89\ \mathrm{mV/count}}.
-\]
+$$
+\boxed{\Delta V_{\mathrm{1\,count}}\approx4.89\ \mathrm{mV/count}}.
+$$
 
 The code uses the same conversion relationship in the voltage-measurement sketches:
 
-\[
+$$
 V=\frac{n}{1023}(5.00\ \mathrm{V}).
-\]
+$$
 
 The expected voltage corresponding to the observed endpoints is approximately
 
-\[
-V_\min=\frac{55}{1023}(5.00)\approx0.269\ \mathrm{V},
-\]
+$$
+V_{\min}=\frac{55}{1023}(5.00)\approx0.269\ \mathrm{V},
+$$
 
 and
 
-\[
-V_\max=\frac{1018}{1023}(5.00)\approx4.976\ \mathrm{V}.
-\]
+$$
+V_{\max}=\frac{1018}{1023}(5.00)\approx4.976\ \mathrm{V}.
+$$
 
 The midpoint code of 536.5 corresponds to approximately
 
-\[
-V_\mathrm{mid}=\frac{536.5}{1023}(5.00)\approx2.623\ \mathrm{V}.
-\]
+$$
+V_{\mathrm{mid}}=\frac{536.5}{1023}(5.00)\approx2.623\ \mathrm{V}.
+$$
 
 ## 4.3 Why the readings occupy discrete levels
 
@@ -192,15 +191,15 @@ Consequently, the measured voltage also appears in discrete levels when the ADC 
 
 The trim-pot sweep demonstrates the discrete nature of the ADC. The sketch used for the voltage conversion is:
 
-[Part 3b_trim_pot_anaglog_read_serial.ino](code/module1/P3_averaging_vs_unaveraging/3b_trim_pot_analog_read_serial/3b_trim_pot_analog_read_serial.ino)
+[Part 3b_trim_pot_analog_read_serial.ino](../../code/module1/P3_averaging_vs_unaveraging/3b_trim_pot_analog_read_serial/3b_trim_pot_analog_read_serial.ino)
 
 The code converts the integer ADC result using
 
-\[
+$$
 V=5.00\frac{n}{1023}.
-\]
+$$
 
-The recorded notes give \(n_\min=55\), \(n_\max=1018\), and \(n_\mathrm{mid}=536.5\). The Serial Plotter capture below shows the resulting voltage sweep.
+The recorded notes give $n_{\min}=55$, $n_{\max}=1018$, and $n_{\mathrm{mid}}=536.5$. The Serial Plotter capture below shows the resulting voltage sweep.
 
 <img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png" alt="Trim-pot voltage steps" width="100%">
 
@@ -211,8 +210,6 @@ The recorded notes give \(n_\min=55\), \(n_\max=1018\), and \(n_\mathrm{mid}=536
 ## 5.2 N = 1 versus N = 1000
 
 For the averaging comparison, 100 sequential unaveraged measurements are first recorded. The program then records another 100 sequential values, where each displayed value is the average of 1000 individual ADC conversions.
-
-**Code:** [`3c_trim_pot_average_vs_unaveraged.ino`](../../code/module1/P3_averaging_vs_unaveraging/3c/3c_trim_pot_average_vs_unaveraged.ino)
 
 The key difference is therefore:
 
@@ -245,12 +242,12 @@ The standard-deviation experiment collects:
 
 - 100 unaveraged measurements.
 - 100 averaged measurements.
-- Each averaged measurement is based on \(N=1000\) individual ADC conversions.
-- The standard deviation is calculated using the sample-standard-deviation expression with \(N-1\) in the denominator.
+- Each averaged measurement is based on $N=1000$ individual ADC conversions.
+- The standard deviation is calculated using the sample-standard-deviation expression with $N-1$ in the denominator.
 
-**Code:** [`3c_trim_pot_STDEV.ino`](../../code/module1/P3_averaging_vs_unaveraging/3c/3c_trim_pot_STDEV.ino)
+**Code:** [Part3c_STDEV.ino](../../code/module1/P3_averaging_vs_unaveraging/3c_STDEV/3c_STDEV.ino)
 
-The program reports the mean of each data set, \(s_1\), \(s_{1000}\), their ratio, and the theoretical \(1/\sqrt{1000}\) prediction.
+The program reports the mean of each data set, $s_1$, $s_{1000}$, their ratio, and the theoretical $1/\sqrt{1000}$ prediction.
 
 <img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_STDEV.png" alt="Standard-deviation experiment output" width="100%">
 
@@ -258,16 +255,16 @@ The program reports the mean of each data set, \(s_1\), \(s_{1000}\), their rati
 
 The theoretical averaging prediction is
 
-\[
+$$
 s_N\approx\frac{s_1}{\sqrt{N}}.
-\]
+$$
 
-For \(N=1000\),
+For $N=1000$,
 
-\[
+$$
 \frac{1}{\sqrt{1000}}
 \approx0.03162.
-\]
+$$
 
 Thus, ideal averaging predicts that the random component of the standard deviation should be about 3.16% of the N = 1 value, corresponding to roughly a factor of 31.6 reduction.
 
@@ -275,25 +272,25 @@ The measured ratio should be compared with 0.03162 rather than expected to match
 
 ---
 
-## 5.4 Measured voltage resolution and the \(1/\sqrt{N}\) prediction
+## 5.4 Measured voltage resolution and the $1/\sqrt{N}$ prediction
 
 For a single ADC conversion, the nominal one-count voltage spacing is
 
-\[
+$$
 \Delta V_1\approx4.8876\ \mathrm{mV}.
-\]
+$$
 
-If independent random noise dominates, averaging \(N\) samples reduces the random standard deviation according to
+If independent random noise dominates, averaging $N$ samples reduces the random standard deviation according to
 
-\[
+$$
 \sigma_N=\frac{\sigma_1}{\sqrt{N}}.
-\]
+$$
 
-For \(N=1000\),
+For $N=1000$,
 
-\[
+$$
 \frac{1}{\sqrt{1000}}\approx0.03162,
-\]
+$$
 
 so the random uncertainty is predicted to be about 31.6 times smaller than for N = 1.
 
@@ -307,11 +304,11 @@ The screenshots illustrate this difference directly: the unaveraged trace moves 
 
 | Quantity | N = 1 | N = 1000 | Expected relationship |
 |---|---:|---:|---|
-| Samples contributing to one reported value | 1 | 1000 | \(N\) increases by 1000× |
+| Samples contributing to one reported value | 1 | 1000 | $N$ increases by 1000× |
 | Nominal single-ADC code spacing | 1 ADC count | 1 ADC count per underlying conversion | ADC remains 10-bit |
 | Nominal single-code voltage spacing | 4.8876 mV | 4.8876 mV for an individual conversion | unchanged |
-| Random standard deviation | \(s_1\) | \(s_{1000}\) | \(s_{1000}\approx s_1/\sqrt{1000}\) |
-| Predicted noise ratio | 1 | 0.03162 | \(1/\sqrt{1000}\) |
+| Random standard deviation | $s_1$ | $s_{1000}$ | $s_{1000}\approx s_1/\sqrt{1000}$ |
+| Predicted noise ratio | 1 | 0.03162 | $1/\sqrt{1000}$ |
 | Visual result | noisier / more step-like | smoother / less variable | averaging suppresses fluctuations |
 
 The repository evidence supports the qualitative conclusion required by the experiment: averaging makes the measured voltage more stable and improves precision because random fluctuations partially cancel when many independent samples are combined.
@@ -322,7 +319,7 @@ The repository evidence supports the qualitative conclusion required by the expe
 
 The timing sketch uses Arduino's `micros()` function around the loop containing 1000 `analogRead()` conversions.
 
-**Code:** [`3d_trim_pot_micros.ino`](../../code/module1/P3_averaging_vs_unaveraging/3d_trim_pot_micros/3d_trim_pot_micros.ino)
+**Code:** [3d_trim_pot_micros.ino](../../code/module1/P3_averaging_vs_unaveraging/3d_trim_pot_micros/3d_trim_pot_micros.ino)
 
 The recorded result is:
 
@@ -336,13 +333,13 @@ The recorded result is:
 
 *Figure 13. Timing evidence for 1000 ADC conversions. The Serial Monitor reports 120452 microseconds for 1000 conversions, approximately 8.30 conversions/s, and approximately 120.45 microseconds per conversion.*
 
-Averaging improves precision by reducing random fluctuations, but it costs time because the Arduino must perform many conversions before producing one averaged result. With \(N=1000\), approximately 1000 ADC measurements are required for each averaged value. This makes the averaged measurement act as a **low-pass filter**: rapid sample-to-sample fluctuations are suppressed because they have less influence on the long-term mean, while slower changes in the input are preserved.
+Averaging improves precision by reducing random fluctuations, but it costs time because the Arduino must perform many conversions before producing one averaged result. With $N=1000$, approximately 1000 ADC measurements are required for each averaged value. This makes the averaged measurement act as a **low-pass filter**: rapid sample-to-sample fluctuations are suppressed because they have less influence on the long-term mean, while slower changes in the input are preserved.
 
 The tradeoff is therefore:
 
-\[
+$$
 \boxed{\text{more averaging} \rightarrow \text{better precision but slower response}}
-\]
+$$
 
 In signal-processing terms, averaging improves precision while reducing **time resolution/bandwidth**. A rapidly changing input cannot be represented as quickly because the system must spend time collecting the samples that form each average.
 
@@ -360,27 +357,27 @@ The P4 sketch uses:
 - Reference voltage: **5.00 V**
 - Serial communication: **9600 baud**
 
-**Code:** [`P4_trim_pot_DutyCycle.ino`](../../code/module1/P4_trim_pot_DutyCycle/P4_trim_pot_DutyCycle.ino)
+**Code:** [P4_trim_pot_DutyCycle.ino](../../code/module1/P4_trim_pot_DutyCycle/P4_trim_pot_DutyCycle.ino)
 
 The sketch first collects 1000 ADC readings and calculates their arithmetic mean:
 
-\[
-n_\mathrm{avg}
+$$
+n_{\mathrm{avg}}
 =\frac{1}{1000}\sum_{j=1}^{1000}n_j.
-\]
+$$
 
 It then converts the averaged ADC value to voltage:
 
-\[
-V_\mathrm{in}
-=5.00\frac{n_\mathrm{avg}}{1023}.
-\]
+$$
+V_{\mathrm{in}}
+=5.00\frac{n_{\mathrm{avg}}}{1023}.
+$$
 
 Finally, the averaged ADC value is mapped to an 8-bit PWM value using approximately
 
-\[
-\mathrm{PWM}\approx\frac{n_\mathrm{avg}}{4}.
-\]
+$$
+\mathrm{PWM}\approx\frac{n_{\mathrm{avg}}}{4}.
+$$
 
 The Arduino's `analogWrite(9, pwmValue)` then applies the corresponding PWM output on pin 9.
 
@@ -394,19 +391,19 @@ The recorded Serial Monitor evidence shows an averaged ADC value near 539.08–5
 
 *Figure 14. P4 averaged ADC, voltage, and PWM Serial output. The captured output repeatedly reports an average ADC near 539.08–539.09, a voltage near 2.6348–2.6349 V, and PWM = 134.*
 
-For example, using the displayed value \(n_\mathrm{avg}\approx539.09\),
+For example, using the displayed value $n_{\mathrm{avg}}\approx539.09$,
 
-\[
-V_\mathrm{in}
+$$
+V_{\mathrm{in}}
 \approx5.00\frac{539.09}{1023}
 \approx2.635\ \mathrm{V}.
-\]
+$$
 
 The displayed PWM value of 134 is consistent with the sketch's approximate mapping,
 
-\[
+$$
 539.09/4\approx134.8,
-\]
+$$
 
 with the integer PWM command constrained to the Arduino's 8-bit PWM range.
 
@@ -444,26 +441,26 @@ The associated circuit photographs are included below for completeness.
 
 The oscilloscope is the appropriate instrument for determining the actual electrical PWM waveform. The waveform should be characterized using:
 
-- \(V_\mathrm{HIGH}\): measured high-level voltage.
-- \(V_\mathrm{LOW}\): measured low-level voltage.
-- \(T\): period of one complete PWM cycle.
-- \(f=1/T\): PWM frequency.
+- $V_{\mathrm{HIGH}}$: measured high-level voltage.
+- $V_{\mathrm{LOW}}$: measured low-level voltage.
+- $T$: period of one complete PWM cycle.
+- $f=1/T$: PWM frequency.
 - Duty cycle:
 
-\[
-D=\frac{t_\mathrm{HIGH}}{T}\times100\%.
-\]
+$$
+D=\frac{t_{\mathrm{HIGH}}}{T}\times100\%.
+$$
 
 For the submitted measurements, the numerical oscilloscope readings should be transcribed from the scope's calibrated vertical and horizontal divisions. The repository photographs preserve the scope evidence, but the photographs do not expose sufficiently legible scale/readout information for every requested numerical quantity. Therefore, the values below are intentionally left as transcription fields rather than inventing measurements:
 
 | PWM measurement | High duty-cycle setting | Low duty-cycle setting |
 |---|---:|---:|
-| \(V_\mathrm{HIGH}\) | **[transcribe from scope] V** | **[transcribe from scope] V** |
-| \(V_\mathrm{LOW}\) | **[transcribe from scope] V** | **[transcribe from scope] V** |
-| Period \(T\) | **[transcribe from scope] ms** | **[transcribe from scope] ms** |
-| Frequency \(f=1/T\) | **[transcribe/calculate] Hz** | **[transcribe/calculate] Hz** |
-| High time \(t_\mathrm{HIGH}\) | **[transcribe from scope] ms** | **[transcribe from scope] ms** |
-| Duty cycle \(D\) | **[transcribe] %** | **[transcribe] %** |
+| $V_{\mathrm{HIGH}}$ | **[transcribe from scope] V** | **[transcribe from scope] V** |
+| $V_{\mathrm{LOW}}$ | **[transcribe from scope] V** | **[transcribe from scope] V** |
+| Period $T$ | **[transcribe from scope] ms** | **[transcribe from scope] ms** |
+| Frequency $f=1/T$ | **[transcribe/calculate] Hz** | **[transcribe/calculate] Hz** |
+| High time $t_{\mathrm{HIGH}}$ | **[transcribe from scope] ms** | **[transcribe from scope] ms** |
+| Duty cycle $D$ | **[transcribe] %** | **[transcribe] %** |
 
 > **Important:** Do not replace these fields with guessed numbers. The oscilloscope photographs should be checked directly against the physical scope scale/readouts before the final PDF is submitted.
 
@@ -556,14 +553,14 @@ All 14 PNG/PNG-family images currently stored under `docs/images/module1/` are e
 | P1 Blink | LED is switched HIGH/LOW with 1 s on and 1 s off, giving approximately a 2 s cycle. |
 
 
-| P2 ADC range | \(n_\min=55\), \(n_\max=1018\), \(n_\mathrm{mid}=536.5\). |
+| P2 ADC range | $n_{\min}=55$, $n_{\max}=1018$, $n_{\mathrm{mid}}=536.5$. |
 
-| P2 ADC resolution | \(5/1023\approx4.8876\ \mathrm{mV/count}\). |
+| P2 ADC resolution | $5/1023\approx4.8876\ \mathrm{mV/count}$. |
 
 
 | P3 averaging | N = 1000 averages suppress sample-to-sample fluctuations and produce a smoother voltage measurement. |
 
-| P3 theoretical precision improvement | Random standard deviation is predicted to scale as \(1/\sqrt{N}\); for N = 1000, the factor is 0.03162. |
+| P3 theoretical precision improvement | Random standard deviation is predicted to scale as $1/\sqrt{N}$; for N = 1000, the factor is 0.03162. |
 
 | P3 timing | 1000 `analogRead()` conversions measured at 120,452 µs, or approximately 120.45 µs/conversion. |
 
@@ -578,4 +575,4 @@ All 14 PNG/PNG-family images currently stored under `docs/images/module1/` are e
 
 # 9. Overall Conclusion
 
-Module 1 demonstrates the complete measurement chain from a physical analog input to a digitized ADC value, numerical voltage estimate, averaged measurement, and PWM electrical output. The Arduino's 10-bit ADC converts the potentiometer voltage into discrete integer codes, giving a nominal one-count resolution of approximately 4.89 mV for a 5.00 V reference. Averaging 1000 conversions reduces random fluctuations according to the expected \(1/\sqrt{N}\) relationship, producing a substantially more stable measurement. The improvement comes with a time-resolution tradeoff because many individual conversions must be collected before each averaged result is available. Finally, the P4 experiment converts the averaged analog input into a PWM command; the Serial Monitor reports the software-selected/calculated values, while the oscilloscope directly reveals the rapidly switching electrical waveform and its timing characteristics.
+Module 1 demonstrates the complete measurement chain from a physical analog input to a digitized ADC value, numerical voltage estimate, averaged measurement, and PWM electrical output. The Arduino's 10-bit ADC converts the potentiometer voltage into discrete integer codes, giving a nominal one-count resolution of approximately 4.89 mV for a 5.00 V reference. Averaging 1000 conversions reduces random fluctuations according to the expected $1/\sqrt{N}$ relationship, producing a substantially more stable measurement. The improvement comes with a time-resolution tradeoff because many individual conversions must be collected before each averaged result is available. Finally, the P4 experiment converts the averaged analog input into a PWM command; the Serial Monitor reports the software-selected/calculated values, while the oscilloscope directly reveals the rapidly switching electrical waveform and its timing characteristics.
