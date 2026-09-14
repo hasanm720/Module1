@@ -6,19 +6,18 @@ Team members: Kyle Chen and Muhammad Hasan
 Date: September 9, 2026  
 Repository: [hasanm720/Module1 — `mainv2`](https://github.com/hasanm720/Module1/tree/mainv2)
 
-> **Submission note:** This evidence note is organized to match the Module 1 checklist. The Arduino sketches are linked rather than pasted, and the evidence images are referenced directly from `docs/images/module1/`. Additional team-member names can be added to the header if applicable.
+> **Submission note:** This evidence note is organized to match the Module 1 checklist. The Arduino sketches are linked rather than pasted, and the evidence images are referenced directly from `../images/module1/`. Additional team-member names can be added to the header if applicable.
 
 ---
 
 ## 1. Apparatus and Experimental Setup
-
+<img src="../images/module1/P2_analog_read_serial/analog_read_serial_ciruit_photo.png" alt="Analog-read circuit photograph" width="75%">
 
 ### P2 — Analog input / serial measurement apparatus
 
 The analog-read experiment uses an Arduino Uno with a potentiometer connected to analog input **A0**. The potentiometer is used as a variable voltage source between the Arduino's 5 V and ground rails. The center/wiper is connected to A0, so rotating the potentiometer changes the voltage presented to the ADC.
 
-![Apparatus](docs/images/module1/P2_analog_read_serial/analog_read_serial_ciruit_photo.png)
-
+<img src="../images/module1/P2_analog_read_serial/analog_read_serial_ciruit_photo.png" alt="P2 analog-read circuit photograph" width="75%">
 
 *Figure 1. Analog-read/serial apparatus photograph. The photograph shows the Arduino Uno, breadboard, potentiometer, jumper wiring, and USB connection used for the A0 analog-input measurement.*
 
@@ -26,7 +25,8 @@ The corresponding computer-side evidence shows the Arduino IDE/Serial Monitor an
 
 
 
-![alt text](docs/images/module1/P2_analog_read_serial/serial_monitor_and_terminal_screenshot.png)
+<img src="../images/module1/P2_analog_read_serial/serial_monitor_and_terminal_screenshot.png" alt="Serial Monitor and Serial Plotter evidence" width="100%">
+
 *Figure 2. Serial Monitor and Serial Plotter evidence. The Serial Monitor shows repeated integer ADC readings, while the Serial Plotter displays those readings as a time-varying trace.*
 
 ### Part 3 — Trim-pot averaging apparatus
@@ -34,14 +34,15 @@ The corresponding computer-side evidence shows the Arduino IDE/Serial Monitor an
 For the averaging experiments, the potentiometer was used to hold the input near a fixed voltage while repeated ADC conversions were collected. The circuit photograph below documents the trim-pot setup.
 
 
-![alt text](docs/images/module1/P3_quantify_the_power_of_averaging/trim_pot_circuit.PNG)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_circuit.PNG" alt="Trim-pot circuit" width="75%">
+
 *Figure 3. Trim-pot circuit used for the averaging measurements. The photograph shows the trim potentiometer wired to the Arduino analog-input circuit.*
 
 
 The repository also contains a serial-plotter capture of the trim-pot being adjusted through a range of voltages. This demonstrates the ADC's discrete output levels as the potentiometer is changed.
 
 
-![alt text](docs/images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png" alt="Trim-pot voltage sweep" width="100%">
 
 *Figure 4. Trim-pot voltage sweep. The Serial Plotter shows the voltage decreasing in small discrete steps as the potentiometer is adjusted, illustrating ADC quantization.*
 
@@ -51,12 +52,12 @@ The final experiment maps an averaged analog input to PWM output on the Arduino.
 
 
 
-![P4 high-duty-cycle circuit](docs/images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_circuit.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_circuit.PNG" alt="P4 high-duty-cycle circuit" width="75%">
 
 *Figure 5. P4 circuit at a high PWM duty cycle.*
 
 
-![P4 low-duty-cycle circuit](docs/images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_circuit.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_circuit.PNG" alt="P4 low-duty-cycle circuit" width="75%">
 
 *Figure 6. P4 circuit at a low PWM duty cycle.*
 
@@ -179,7 +180,8 @@ The ADC does not report an arbitrary real-valued voltage. It quantizes the input
 
 Consequently, the measured voltage also appears in discrete levels when the ADC number is converted back to volts. Each adjacent integer ADC code is separated by approximately 4.89 mV for a 5.00 V reference. The trim-pot measurements therefore show small step-like changes rather than a perfectly continuous voltage signal.
 
-![Part2 serial evidence](docs/images/module1/P2_analog_read_serial/serial_monitor_and_terminal_screenshot.png)
+<img src="../images/module1/P2_analog_read_serial/serial_monitor_and_terminal_screenshot.png" alt="Part2 serial evidence" width="100%">
+
 *Figure 7. P2 Serial Monitor and Serial Plotter evidence showing the measured ADC samples.*
 
 ---
@@ -200,7 +202,8 @@ V=5.00\frac{n}{1023}.
 
 The recorded notes give \(n_\min=55\), \(n_\max=1018\), and \(n_\mathrm{mid}=536.5\). The Serial Plotter capture below shows the resulting voltage sweep.
 
-![Trim-pot voltage steps](docs/images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png" alt="Trim-pot voltage steps" width="100%">
+
 *Figure 8. Serial Plotter voltage sweep from the trim-pot experiment.*
 
 ---
@@ -218,19 +221,19 @@ The key difference is therefore:
 
 The N = 1 data show the normal one-count ADC quantization and visible sample-to-sample fluctuations.
 
-![N = 1 unaveraged data](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_unaveraged.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_unaveraged.png" alt="N = 1 unaveraged data" width="100%">
 
 *Figure 9. N = 1/unaveraged Serial Plotter result. The trace visibly jumps between discrete voltage levels and has substantially more sample-to-sample variation than the averaged result.*
 
 The N = 1000 result is much smoother because random fluctuations are averaged together.
 
-![N = 1000 averaged data](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_average.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_average.png" alt="N = 1000 averaged data" width="100%">
 
 *Figure 10. N = 1000 averaged Serial Plotter result. The trace is much tighter and smoother because each displayed point represents the mean of 1000 ADC conversions.*
 
 The repository also contains a direct screenshot comparing the acquisition/software output associated with the averaging experiment.
 
-![N = 1 and N = 1000 comparison](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_average_vs_unaveraged_screenshot.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_average_vs_unaveraged_screenshot.png" alt="N = 1 and N = 1000 comparison" width="100%">
 
 *Figure 11. Combined evidence for the averaged versus unaveraged measurements.*
 
@@ -249,7 +252,7 @@ The standard-deviation experiment collects:
 
 The program reports the mean of each data set, \(s_1\), \(s_{1000}\), their ratio, and the theoretical \(1/\sqrt{1000}\) prediction.
 
-![Standard-deviation experiment output](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_STDEV.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_STDEV.png" alt="Standard-deviation experiment output" width="100%">
 
 *Figure 12. Serial output from the standard-deviation calculation. The displayed results include the unaveraged and averaged means, their standard deviations, the measured ratio, and the theoretical 1/sqrt(1000) comparison.*
 
@@ -329,7 +332,7 @@ The recorded result is:
 | Conversions per second | **8.30 conversions/s** |
 | Time per conversion | **120.45 µs/conversion** |
 
-![Timing measurement](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3D/trim_pot_micros.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3D/trim_pot_micros.png" alt="Timing measurement" width="100%">
 
 *Figure 13. Timing evidence for 1000 ADC conversions. The Serial Monitor reports 120452 microseconds for 1000 conversions, approximately 8.30 conversions/s, and approximately 120.45 microseconds per conversion.*
 
@@ -387,7 +390,7 @@ The Arduino's `analogWrite(9, pwmValue)` then applies the corresponding PWM outp
 
 The recorded Serial Monitor evidence shows an averaged ADC value near 539.08–539.09, corresponding to approximately 2.6348–2.6349 V and a PWM value of 134.
 
-![P4 Serial Monitor output](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/trim_pot_DutyCycle.png)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/trim_pot_DutyCycle.png" alt="P4 Serial Monitor output" width="100%">
 
 *Figure 14. P4 averaged ADC, voltage, and PWM Serial output. The captured output repeatedly reports an average ADC near 539.08–539.09, a voltage near 2.6348–2.6349 V, and PWM = 134.*
 
@@ -415,23 +418,23 @@ The oscilloscope images document the actual PWM waveform at high and low duty-cy
 
 ### High-duty-cycle waveform
 
-![High-duty-cycle oscilloscope](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_oscilloscope.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_oscilloscope.PNG" alt="High-duty-cycle oscilloscope" width="100%">
 
 *Figure 15. High-duty-cycle PWM oscilloscope evidence. The scope directly shows the repeated PWM pulses and their timing; the photographed scale/readouts should be used for the final numerical measurements.*
 
 ### Low-duty-cycle waveform
 
-![Low-duty-cycle oscilloscope](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_oscilloscope.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_oscilloscope.PNG" alt="Low-duty-cycle oscilloscope" width="100%">
 
 *Figure 16. Low-duty-cycle PWM oscilloscope evidence. The scope shows narrower high pulses separated by longer low intervals, corresponding to a lower duty cycle.*
 
 The associated circuit photographs are included below for completeness.
 
-![High-duty-cycle circuit](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_circuit.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_circuit.PNG" alt="High-duty-cycle circuit" width="75%">
 
 *Figure 17. High-duty-cycle circuit configuration.*
 
-![Low-duty-cycle circuit](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_circuit.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_circuit.PNG" alt="Low-duty-cycle circuit" width="75%">
 
 *Figure 18. Low-duty-cycle circuit configuration.*
 
@@ -480,11 +483,11 @@ All 14 PNG/PNG-family images currently stored under `docs/images/module1/` are e
 
 ### 7.1 Circuit photograph
 
-![P2 circuit](../images/module1/P2_analog_read_serial/analog_read_serial_ciruit_photo.png)
+<img src="../images/module1/P2_analog_read_serial/analog_read_serial_ciruit_photo.png" alt="P2 circuit" width="75%">
 
 ### 7.2 Serial Monitor / Serial Plotter
 
-![P2 serial evidence](../images/module1/P2_analog_read_serial/serial_monitor_and_terminal_screenshot.png)
+<img src="../images/module1/P2_analog_read_serial/serial_monitor_and_terminal_screenshot.png" alt="P2 serial evidence" width="100%">
 
 ---
 
@@ -492,31 +495,31 @@ All 14 PNG/PNG-family images currently stored under `docs/images/module1/` are e
 
 ### 7.3 Trim-pot voltage-step Serial Plotter
 
-![P3 voltage steps](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_analog_read_voltage_steps/trim_pot_and_serial_plotter_screenshot.png" alt="P3 voltage steps" width="100%">
 
 ### 7.4 Trim-pot circuit
 
-![P3 circuit](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_circuit.PNG)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_circuit.PNG" alt="P3 circuit" width="75%">
 
 ### 7.5 Standard-deviation output
 
-![P3 standard deviation](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_STDEV.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_STDEV.png" alt="P3 standard deviation" width="100%">
 
 ### 7.6 Averaged voltage plot
 
-![P3 averaged voltage](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_average.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_average.png" alt="P3 averaged voltage" width="100%">
 
 ### 7.7 Averaged versus unaveraged screenshot
 
-![P3 averaging comparison](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_average_vs_unaveraged_screenshot.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_average_vs_unaveraged_screenshot.png" alt="P3 averaging comparison" width="100%">
 
 ### 7.8 Unaveraged voltage plot
 
-![P3 unaveraged voltage](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_unaveraged.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3C/trim_pot_unaveraged.png" alt="P3 unaveraged voltage" width="100%">
 
 ### 7.9 Microsecond timing output
 
-![P3 timing](../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3D/trim_pot_micros.png)
+<img src="../images/module1/P3_quantify_the_power_of_averaging/trim_pot_part3D/trim_pot_micros.png" alt="P3 timing" width="100%">
 
 ---
 
@@ -524,58 +527,28 @@ All 14 PNG/PNG-family images currently stored under `docs/images/module1/` are e
 
 ### 7.10 High-duty-cycle circuit
 
-![P4 high-duty circuit](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_circuit.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_circuit.PNG" alt="P4 high-duty circuit" width="75%">
 
 ### 7.11 High-duty-cycle oscilloscope
 
-![P4 high-duty oscilloscope](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_oscilloscope.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/high_duty_cycle_oscilloscope.PNG" alt="P4 high-duty oscilloscope" width="100%">
 
 ### 7.12 Low-duty-cycle circuit
 
-![P4 low-duty circuit](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_circuit.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_circuit.PNG" alt="P4 low-duty circuit" width="75%">
 
 ### 7.13 Low-duty-cycle oscilloscope
 
-![P4 low-duty oscilloscope](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_oscilloscope.PNG)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/low_duty_cycle_oscilloscope.PNG" alt="P4 low-duty oscilloscope" width="100%">
 
 ### 7.14 P4 averaged ADC / voltage / PWM output
 
-![P4 serial output](../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/trim_pot_DutyCycle.png)
+<img src="../images/module1/P4_LED_Brightness_From_Averaged_Analog_Input/trim_pot_DutyCycle.png" alt="P4 serial output" width="100%">
+
 
 ---
 
-# 8. Checklist Before Submission
-
-Use this checklist immediately before exporting the Markdown note to PDF.
-
-- [x] Assignment code, module, date, and repository are identified at the top.
-- [ ] Add any additional team-member names if this was a multi-person team.
-- [x] Apparatus photographs are included.
-- [x] Every Arduino sketch used for the submitted results is linked.
-- [x] Arduino code is linked rather than pasted into the note.
-- [x] P2 minimum, maximum, and midrange ADC values are documented.
-- [x] P2 one-count voltage resolution is calculated in volts and millivolts.
-- [x] The discrete nature of ADC readings is explained.
-- [x] P3 N = 1 and N = 1000 Serial Plotter evidence is included.
-- [x] The standard-deviation experiment and \(1/\sqrt{N}\) comparison are documented.
-- [x] The 1000-conversion timing result is documented.
-- [x] The precision-versus-time-resolution tradeoff is explained.
-- [x] P4 high- and low-duty-cycle oscilloscope evidence is included.
-- [ ] Transcribe the calibrated oscilloscope \(V_\mathrm{HIGH}\), \(V_\mathrm{LOW}\), period, frequency, high-time, and duty-cycle measurements into the P4 table.
-- [x] The Serial Monitor/Serial Plotter versus oscilloscope distinction is explained.
-- [x] All 14 images currently under `docs/images/module1/` are referenced.
-- [ ] Verify every image renders correctly after the Markdown file is placed at `docs/module_notes/module_01_evidence.md`.
-- [ ] Verify every code link opens the exact intended sketch.
-- [ ] Commit the completed note, sketches, and evidence.
-- [ ] Push the checkpoint commit to GitHub.
-- [ ] Copy the **full commit hash** from the checkpoint commit.
-- [ ] Export the note as `A1_Lastname_Lastname.pdf` using the required naming convention.
-- [ ] Confirm the PDF's first page contains the team members, repository URL, and full commit hash.
-- [ ] Each team member separately submits the PDF to the required Moodle activity.
-
----
-
-# 9. Key Results Summary
+# 8. Key Results Summary
 
 | Experiment | Main result |
 |---|---|
@@ -603,6 +576,6 @@ Use this checklist immediately before exporting the Markdown note to PDF.
 
 ---
 
-# 10. Overall Conclusion
+# 9. Overall Conclusion
 
 Module 1 demonstrates the complete measurement chain from a physical analog input to a digitized ADC value, numerical voltage estimate, averaged measurement, and PWM electrical output. The Arduino's 10-bit ADC converts the potentiometer voltage into discrete integer codes, giving a nominal one-count resolution of approximately 4.89 mV for a 5.00 V reference. Averaging 1000 conversions reduces random fluctuations according to the expected \(1/\sqrt{N}\) relationship, producing a substantially more stable measurement. The improvement comes with a time-resolution tradeoff because many individual conversions must be collected before each averaged result is available. Finally, the P4 experiment converts the averaged analog input into a PWM command; the Serial Monitor reports the software-selected/calculated values, while the oscilloscope directly reveals the rapidly switching electrical waveform and its timing characteristics.
