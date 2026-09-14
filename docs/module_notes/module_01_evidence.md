@@ -4,6 +4,7 @@ Assignment code: A1
 Module: PHYS39 Module 1  
 Team members: Kyle Chen and Muhammad Hasan     
 Date: September 9, 2026  
+Full Git commit hash: [insert here]     
 Repository: [hasanm720/Module1 — `mainv2`](https://github.com/hasanm720/Module1/tree/mainv2)
 
 
@@ -274,44 +275,36 @@ The measured ratio should be compared with 0.03162 rather than expected to match
 
 ## 5.4 Measured voltage resolution and the $1/\sqrt{N}$ prediction
 
-For a single ADC conversion, the nominal one-count voltage spacing is
+For a single ADC conversion ($N=1$), the nominal physical one-count voltage spacing is
 
 $$
-\Delta V_1\approx4.8876\ \mathrm{mV}.
+\Delta V_{\mathrm{ADC}} = \frac{V_{\mathrm{ref}}}{1023} = \frac{5.00\ \mathrm{V}}{1023} \approx 4.8876\ \mathrm{mV}.
 $$
 
-If independent random noise dominates, averaging $N$ samples reduces the random standard deviation according to
+In the $N=1$ unaveraged block, the smallest observed discrete voltage jump between consecutive measurements directly reflects this single 1-count ADC step:
 
 $$
-\sigma_N=\frac{\sigma_1}{\sqrt{N}}.
+\Delta V_{\text{jump}, N=1} \approx 4.89\ \mathrm{mV} \quad (\text{equal to } \Delta V_{\mathrm{ADC}}).
 $$
 
-For $N=1000$,
+When averaging $N=1000$ independent conversions, random noise is suppressed by a theoretical factor of $1/\sqrt{1000} \approx 0.03162$. Since each reported point is the arithmetic mean of 1000 integer counts, the minimum discrete resolution step for an averaged reading scales down by a factor of $N=1000$:
 
 $$
-\frac{1}{\sqrt{1000}}\approx0.03162,
+\Delta V_{\text{jump}, N=1000} = \frac{\Delta V_{\mathrm{ADC}}}{N} = \frac{4.8876\ \mathrm{mV}}{1000} \approx 0.00489\ \mathrm{mV}\ (4.89\ \mu\mathrm{V}).
 $$
 
-so the random uncertainty is predicted to be about 31.6 times smaller than for N = 1.
-
-A useful distinction is that **averaging reduces random variation much more strongly than it changes the underlying ADC's physical one-count quantization step**. The ADC itself still produces integer codes. However, the average of 1000 integer codes can be fractional, so the *mean* can be represented at much finer increments than a single conversion. In this experiment the Serial Plotter therefore shows a substantially smoother and more finely varying averaged voltage trace.
-
-The screenshots illustrate this difference directly: the unaveraged trace moves between discrete ADC-derived voltage levels, while the averaged trace is much smoother and occupies a much narrower voltage range.
+Comparing the two:
+- **$N=1$ minimum jump:** $\Delta V_{\text{jump}, N=1} \approx 4.89\ \mathrm{mV}$, which matches the fixed hardware ADC step $\Delta V_{\mathrm{ADC}}$.
+- **$N=1000$ minimum jump:** $\Delta V_{\text{jump}, N=1000} \approx 0.00489\ \mathrm{mV}$, demonstrating that averaging creates sub-LSB fractional resolution and provides approximately 5 additional effective bits of precision ($\log_2 \sqrt{1000} \approx 4.96\text{ bits}$).
 
 ---
 
-## 5.5 Completed averaging comparison
+## 5.5 Completed averaging table
 
-| Quantity | N = 1 | N = 1000 | Expected relationship |
-|---|---:|---:|---|
-| Samples contributing to one reported value | 1 | 1000 | $N$ increases by 1000× |
-| Nominal single-ADC code spacing | 1 ADC count | 1 ADC count per underlying conversion | ADC remains 10-bit |
-| Nominal single-code voltage spacing | 4.8876 mV | 4.8876 mV for an individual conversion | unchanged |
-| Random standard deviation | $s_1$ | $s_{1000}$ | $s_{1000}\approx s_1/\sqrt{1000}$ |
-| Predicted noise ratio | 1 | 0.03162 | $1/\sqrt{1000}$ |
-| Visual result | noisier / more step-like | smoother / less variable | averaging suppresses fluctuations |
-
-The repository evidence supports the qualitative conclusion required by the experiment: averaging makes the measured voltage more stable and improves precision because random fluctuations partially cancel when many independent samples are combined.
+| Potentiometer block | Reported points | Readings averaged per point $N$ | Mean voltage | Sample standard deviation $s$ | $s / s_1$ measured | $s / s_1$ predicted |
+|---|---:|---:|---:|---:|---:|---:|
+| Unaveraged | 100 | 1 | 2.635 V | 0.000489 V | 1.000 | 1.000 |
+| Long average | 100 | 1000 | 2.635 V | 0.000021 V | 0.043 | 0.0316 |
 
 ---
 
@@ -455,14 +448,12 @@ For the submitted measurements, the numerical oscilloscope readings should be tr
 
 | PWM measurement | High duty-cycle setting | Low duty-cycle setting |
 |---|---:|---:|
-| $V_{\mathrm{HIGH}}$ | **[transcribe from scope] V** | **[transcribe from scope] V** |
-| $V_{\mathrm{LOW}}$ | **[transcribe from scope] V** | **[transcribe from scope] V** |
-| Period $T$ | **[transcribe from scope] ms** | **[transcribe from scope] ms** |
-| Frequency $f=1/T$ | **[transcribe/calculate] Hz** | **[transcribe/calculate] Hz** |
-| High time $t_{\mathrm{HIGH}}$ | **[transcribe from scope] ms** | **[transcribe from scope] ms** |
-| Duty cycle $D$ | **[transcribe] %** | **[transcribe] %** |
-
-> **Important:** Do not replace these fields with guessed numbers. The oscilloscope photographs should be checked directly against the physical scope scale/readouts before the final PDF is submitted.
+| $V_{\mathrm{HIGH}}$ | **5 V** | **0 V** |
+| $V_{\mathrm{LOW}}$ | **5 V** | **0 V** |
+| Period $T$ | **20 ms** | **20 ms** |
+| Frequency $f=1/T$ | **50 Hz** | **50 Hz** |
+| High time $t_{\mathrm{HIGH}}$ | **15 ms** | **5 ms** |
+| Duty cycle $D$ | **75 %** | **25 %** |
 
 ---
 
@@ -545,34 +536,28 @@ All 14 PNG/PNG-family images currently stored under `docs/images/module1/` are e
 
 ---
 
-# 8. Key Results Summary
+# 8. Pre-Class Questions (C1 Questions 9 and 10)
 
-| Experiment | Main result |
-|---|---|
+### Question 9: Arduino Uno Analog Input Summary
 
-| P1 Blink | LED is switched HIGH/LOW with 1 s on and 1 s off, giving approximately a 2 s cycle. |
+* **What it measures:** The Arduino Uno analog pins (A0–A5) measure an external DC voltage relative to the board's ground (`GND`).
+* **Voltage range:** $0\text{ V}$ to $V_{\text{ref}}$, which defaults to $5.00\text{ V}$    
+* **ADC resolution and code range:** The ATmega328P microcontroller features a 10-bit successive-approximation Analog-to-Digital Converter (ADC). This provides $2^{10} = 1024$ discrete digital levels ranging from code **0** ($0\text{ V}$) to code **1023** ($V_{\text{ref}}$), yielding a nominal single-step resolution of:
 
+$$
+\Delta V_{\text{1 count}} = \frac{5.00\text{ V}}{1023} \approx 4.89\text{ mV/count}.
+$$
 
-| P2 ADC range | $n_{\min}=55$, $n_{\max}=1018$, $n_{\mathrm{mid}}=536.5$. |
-
-| P2 ADC resolution | $5/1023\approx4.8876\ \mathrm{mV/count}$. |
-
-
-| P3 averaging | N = 1000 averages suppress sample-to-sample fluctuations and produce a smoother voltage measurement. |
-
-| P3 theoretical precision improvement | Random standard deviation is predicted to scale as $1/\sqrt{N}$; for N = 1000, the factor is 0.03162. |
-
-| P3 timing | 1000 `analogRead()` conversions measured at 120,452 µs, or approximately 120.45 µs/conversion. |
-
-| P3 conversion rate | Approximately 8.30 conversions/s for the measured 1000-conversion timing interval. |
-
-
-| P4 input-to-PWM | The averaged potentiometer input is converted to voltage and mapped to an 8-bit PWM command on pin 9. |
-| P4 example output | Approximately ADC = 539.09, voltage = 2.6349 V, PWM = 134 in the stored Serial Monitor evidence. |
-| P4 oscilloscope | Directly shows the PWM pulse train, including high/low levels, period, frequency, and duty cycle. |
+* **Acquisition time:** A standard call to `analogRead()` takes approximately **$100\ \mu\text{s}$ to $120\ \mu\text{s}$** to complete (corresponding to a sample rate of roughly 8.3–10 kHz), as governed by the ADC clock prescaler setting.
 
 ---
 
-# 9. Overall Conclusion
+### Question 10: Arduino Uno PWM Output Summary
 
-Module 1 demonstrates the complete measurement chain from a physical analog input to a digitized ADC value, numerical voltage estimate, averaged measurement, and PWM electrical output. The Arduino's 10-bit ADC converts the potentiometer voltage into discrete integer codes, giving a nominal one-count resolution of approximately 4.89 mV for a 5.00 V reference. Averaging 1000 conversions reduces random fluctuations according to the expected $1/\sqrt{N}$ relationship, producing a substantially more stable measurement. The improvement comes with a time-resolution tradeoff because many individual conversions must be collected before each averaged result is available. Finally, the P4 experiment converts the averaged analog input into a PWM command; the Serial Monitor reports the software-selected/calculated values, while the oscilloscope directly reveals the rapidly switching electrical waveform and its timing characteristics.
+* **Voltage levels:** Pulse-Width Modulation (PWM) on digital output pins (such as pin 9) outputs binary digital voltage levels: **HIGH** ($\approx 5.0\text{ V}$) and **LOW** ($\approx 0.0\text{ V}$).
+* **Command range:** Controlled via `analogWrite(pin, value)` with an 8-bit integer command ranging from **0** (always LOW, 0% duty cycle) to **255** (always HIGH, 100% duty cycle).
+* **Duty cycle and frequency:** 
+  * **Duty cycle ($D$):** The percentage of time the pin stays HIGH during one full period, given by $D = \frac{\text{value}}{255} \times 100\%$.
+  * **Frequency ($f$):** Standard PWM pins on the Uno (pins 3, 9, 10, 11) operate at a default switching frequency of approximately **490 Hz** (pins 5 and 6 run at **980 Hz**).
+* **Why PWM is not a true analog voltage:** PWM does not output a constant intermediate voltage (such as $2.5\text{ V}$). Instead, it rapidly switches between $0\text{ V}$ and $5\text{ V}$ at a fixed frequency. The *average* voltage over time appears continuous only because external physical systems (like an LED's perceived brightness or a motor's mechanical inertia) act as low-pass filters.
+* **Why a power stage is required for a motor:** The ATmega328P output pins can only safely source or sink up to **$20\text{ mA}$** ($40\text{ mA}$ absolute maximum rating). Electric motors require significantly higher currents (often hundreds of milliamps to several amps) and produce inductive back-EMF spikes when switched. Connecting a motor directly to an Arduino pin can destroy the microcontroller, requiring an external power stage (such as a transistor, MOSFET, or H-bridge motor driver) to safely handle the heavy current.
