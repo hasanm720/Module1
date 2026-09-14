@@ -4,7 +4,7 @@ Assignment code: A1
 Module: PHYS39 Module 1  
 Team members: Kyle Chen and Muhammad Hasan     
 Date: September 9, 2026  
-Full Git commit hash: [insert here]     
+Full Git commit hash: 0b140dde7c83f30be975b22329dd135b2fb49a1d       
 Repository: [hasanm720/Module1 — `mainv2`](https://github.com/hasanm720/Module1/tree/mainv2)
 
 
