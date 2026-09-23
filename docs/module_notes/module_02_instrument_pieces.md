@@ -57,6 +57,15 @@ $$
 | Heat | HIGH | PWM at the requested duty | 0 V / off | Clockwise |
 | Cool | LOW | 0 V / off | PWM at the requested duty | Counterclockwise |
 
+### Completed H-bridge signal table
+
+| Command | D11 (mode select) | D9 / RPWM | D10 / LPWM | H-bridge output state | Motor rotation |
+|---|---:|---|---|---|---|
+| Heat / clockwise | HIGH | PWM at the requested duty | 0 V / off | M+ driven by active PWM, M− effectively at the return/reference side | Clockwise |
+| Cool / counterclockwise | LOW | 0 V / off | PWM at the requested duty | M− driven by active PWM while M+ is the return/reference side; terminal polarity reverses | Counterclockwise |
+
+This is the complete logic used in the lab: the Arduino does not drive both H-bridge inputs at the same time. Instead, pin 11 selects the active direction, and the selected H-bridge input receives the PWM command while the other input is held at 0 V. Reversing the command between D9 and D10 reverses the average motor voltage and therefore reverses the shaft direction at the same duty cycle.
+
 <img src="../images/module2/P3_Hbridge/serial_monitor_cold_vs_hot_screenshot.png" alt="H-bridge serial monitor in heat and cool modes" width="100%">
 
 *Figure 2. Serial evidence records the same approximately 109/255 command in HEAT and COOL; changing D11 transfers PWM between pins 9 and 10.*
