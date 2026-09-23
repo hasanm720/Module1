@@ -7,12 +7,12 @@
 | [x] | H-bridge control pins | |
 | [x] | PWM starts at zero? | |
 | [x] | Module 2 motor test completed with TEC disconnected? | |
-| [ ] | High-current leads are 18 AWG? | |
+| [x] | High-current leads are 18 AWG? | |
 | [x] | Prepared TEC and thermal-switch wiring inspected? | |
-| [ ] | Heat exchanger connected to 12 V and operating? | |
+| [x] | Heat exchanger connected to 12 V and operating? | |
 | [x] | Power supply voltage       | [_________12V_________] |
-| [ ] | Power supply current limit | [____________________] |
-| [ ] | Thermal cutoff identified? | [____________________] |
+| [x] | Power supply current limit | [________10A________] |
+| [ ] | Thermal cutoff identified? | [________75°C________] |
 | [ ] | Instructor check complete? | |
 
 
