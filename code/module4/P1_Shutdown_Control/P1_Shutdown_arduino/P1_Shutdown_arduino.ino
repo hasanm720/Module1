@@ -31,7 +31,7 @@ const float T0 = 298.15;
 // --------------------------------------------------
 // Module 4 temperature-safety settings
 // --------------------------------------------------
-const float TEMPERATURE_LIMIT_C = 30;
+const float TEMPERATURE_LIMIT_C = 60;
 
 // Number of ADC readings averaged for each temperature measurement.
 const int TEMPERATURE_SAMPLES = 500;

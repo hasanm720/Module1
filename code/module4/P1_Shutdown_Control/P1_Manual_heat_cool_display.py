@@ -19,8 +19,6 @@ SERIAL_PORT = None            # Set a port here to override automatic detection.
 BAUD_RATE = 9600              # Must match Arduino Serial.begin().
 WINDOW_DURATION_SEC = 60.0    # Number of recent seconds shown in each chart.
 UPDATE_INTERVAL_MS = 100      # How often the GUI checks the serial port.
-TEMP_MIN_C = 10.0             # Temperature chart lower limit in degrees C.
-TEMP_MAX_C = 65.0             # Temperature chart upper limit in degrees C.
 CSV_FILENAME = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     'tec_safety_data.csv'
@@ -171,7 +169,8 @@ class ManualTecWindow(QtWidgets.QMainWindow):
         self.temperature_plot = pg.PlotWidget(title='Live TEC Temperature vs. Time')
         self.temperature_plot.setLabel('left', 'Temperature', units='°C')
         self.temperature_plot.setLabel('bottom', 'Arduino Time', units='s')
-        self.temperature_plot.setYRange(TEMP_MIN_C, TEMP_MAX_C)
+        # Curves contain only the rolling window, so Y follows recent data.
+        self.temperature_plot.enableAutoRange(axis='y', enable=True)
         self.temperature_plot.showGrid(x=True, y=True)
         self.temperature_heat_curve = self.temperature_plot.plot(
             pen=pg.mkPen('r', width=2), name='Heating')
@@ -184,7 +183,7 @@ class ManualTecWindow(QtWidgets.QMainWindow):
         self.pwm_plot = pg.PlotWidget(title='Live PWM vs. Time')
         self.pwm_plot.setLabel('left', 'PWM')
         self.pwm_plot.setLabel('bottom', 'Arduino Time', units='s')
-        self.pwm_plot.setYRange(0, 255)
+        self.pwm_plot.enableAutoRange(axis='y', enable=True)
         self.pwm_plot.showGrid(x=True, y=True)
         self.pwm_heat_curve = self.pwm_plot.plot(pen=pg.mkPen('r', width=2), name='Heating')
         self.pwm_cool_curve = self.pwm_plot.plot(pen=pg.mkPen('b', width=2), name='Cooling')
