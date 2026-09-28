@@ -31,7 +31,7 @@ const float T0 = 298.15;
 // --------------------------------------------------
 // Module 4 temperature-safety settings
 // --------------------------------------------------
-const float TEMPERATURE_LIMIT_C = 60.0;
+const float TEMPERATURE_LIMIT_C = 30;
 
 // Number of ADC readings averaged for each temperature measurement.
 const int TEMPERATURE_SAMPLES = 500;
@@ -54,6 +54,7 @@ bool safetyShutdown = false;
 // --------------------------------------------------
 char commandBuffer[48];
 byte commandLength = 0;
+bool discardCommand = false;
 
 unsigned long lastReportMs = 0;
 
@@ -78,8 +79,8 @@ void applyTecOutput() {
 
   if (heating) {
 
-    analogWrite(HBRIDGE_PIN9, pwmValue);
     digitalWrite(HBRIDGE_PIN10, LOW);
+    analogWrite(HBRIDGE_PIN9, pwmValue);
 
   } else {
 
@@ -287,9 +288,16 @@ void readSerialCommands() {
   // Read available characters without delay(),
   // so slider movement is applied promptly.
 
-  while (Serial.available() > 0) {
+  // Bound serial work so continuous input cannot starve the safety check.
+  int remaining = 64;
+  while (Serial.available() > 0 && remaining-- > 0) {
 
     char incoming = Serial.read();
+
+    if (discardCommand) {
+      if (incoming == '\n') discardCommand = false;
+      continue;
+    }
 
     if (incoming == '\r') {
       continue;
@@ -310,6 +318,8 @@ void readSerialCommands() {
       commandBuffer[commandLength++] = incoming;
 
     } else {
+
+      discardCommand = true;
 
       // Drop an overlong command rather than writing
       // past the end of the buffer.
@@ -352,7 +362,15 @@ void reportTelemetry(float temperatureC) {
   Serial.print(pwmValue);
 
   Serial.print(", DIR: ");
-  Serial.println(heating ? "HEAT" : "COOL");
+  Serial.print(heating ? "HEAT" : "COOL");
+  Serial.print(", Safety: ");
+  Serial.print(safetyShutdown ? "SHUTDOWN" : "OK");
+  Serial.print(", Limit (C): ");
+  Serial.print(TEMPERATURE_LIMIT_C, 2);
+  Serial.print(", PWM9: ");
+  Serial.print(!safetyShutdown && heating ? pwmValue : 0);
+  Serial.print(", PWM10: ");
+  Serial.println(!safetyShutdown && !heating ? pwmValue : 0);
 }
 
 
@@ -379,8 +397,7 @@ void setup() {
 // --------------------------------------------------
 void loop() {
 
-  // Check for commands from the Python GUI.
-  readSerialCommands();
+  // Measure and check safety before allowing any new output command.
 
 
   // ------------------------------------------------
@@ -395,6 +412,8 @@ void loop() {
   // Check the 60 C safety limit.
   // ------------------------------------------------
   checkTemperatureSafety(temperatureC);
+
+  readSerialCommands();
 
 
   // ------------------------------------------------
@@ -418,4 +437,3 @@ void loop() {
     reportTelemetry(temperatureC);
   }
 }
-```
