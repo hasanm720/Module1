@@ -11,6 +11,8 @@ Signed PWM is positive for heating and negative for cooling. Susceptibility is �
 | Heating | 0.5357 | 0.5311 | 0.99946 | 0.4868–0.5614 |
 | Cooling | 0.1891 | 0.1878 | 0.99899 | 0.1756–0.2072 |
 
+Heating/cooling fitted slope ratio: 2.8289 (dimensionless).
+
 Both data sets are approximately linear over the measured range, but adjacent-point slopes vary; the fitted slope is an overall approximation, not an exact constant response. The recorded ranges are not sufficient to establish measurement uncertainty.
 
 For cooling, the slope versus signed PWM is positive: moving toward zero PWM raises temperature. Versus cooling PWM magnitude, the slope has the same size but is negative. Heating slopes have the same sign under either convention.

@@ -8,9 +8,6 @@ import argparse
 import re
 import textwrap
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -48,6 +45,10 @@ def read_table(path):
 
 
 def main():
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--table', type=Path, default=DEFAULT_TABLE)
     parser.add_argument('--output-dir', type=Path, default=DEFAULT_OUTPUT)
@@ -63,9 +64,11 @@ def main():
               '| Direction | Endpoint finite difference (°C/count) | Linear fit (°C/count) | R² | Local slope range (°C/count) |',
               '|---|---:|---:|---:|---:|']
     local_sections = []
+    slopes = {}
     for direction, color in [('Heating', 'red'), ('Cooling', 'blue')]:
         x, y, error = np.array(groups[direction]).T
         slope, intercept = np.polyfit(x, y, 1)
+        slopes[direction] = slope
         residual = y - (slope * x + intercept)
         total = np.sum((y - y.mean()) ** 2)
         r_squared = 1 - np.sum(residual ** 2) / total if total else float('nan')
@@ -82,6 +85,9 @@ def main():
             local_sections.append(f'| {start:.0f} to {end:.0f} | {value:.4f} |')
         local_sections.extend(['', f'Maximum absolute departure from the straight-line fit: '
                                f'{np.max(np.abs(residual)):.3f} °C.'])
+    if slopes['Cooling'] != 0:
+        report.extend(['', f'Heating/cooling fitted slope ratio: '
+                       f'{abs(slopes["Heating"] / slopes["Cooling"]):.4f} (dimensionless).'])
     report.extend(['', 'Both data sets are approximately linear over the measured range, '
                    'but adjacent-point slopes vary; the fitted slope is an overall approximation, '
                    'not an exact constant response. The recorded ranges are not sufficient to '
