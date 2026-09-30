@@ -104,6 +104,7 @@ class ManualTecWindow(QtWidgets.QMainWindow):
 
     def init_ui(self):
         """Build the buttons, readouts, and pyqtgraph charts."""
+        pg.setConfigOption('background', 'w')
         central_widget = QtWidgets.QWidget()
         self.setCentralWidget(central_widget)
         layout = QtWidgets.QVBoxLayout(central_widget)
