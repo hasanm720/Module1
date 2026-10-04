@@ -50,6 +50,14 @@ Check: r = 2 gives Q_J/Q_P = 1/3.
 This inference assumes comparable ON-current and G in both directions and
 approximately constant properties; it is not an absolute heat-flow measurement.
 
+Signed-duty formulation: let s be signed PWM, u = s/255, and D = |u|.
+Q_TEC = u*Q_P + |u|*Q_J.
+For u >= 0: T_o,h - T_0 = u*(Q_P + Q_J)/G.
+For u <= 0: T_o,c - T_0 = u*(Q_P - Q_J)/G.
+dT_o,h/du = (Q_P + Q_J)/G; dT_o,c/du = (Q_P - Q_J)/G.
+Both are positive when Q_P > Q_J. Each signed-PWM slope includes 1/255,
+so their ratio is the same r calculated above.
+
 3. FIND AND USE THE LAIRD MAXIMUM-CURRENT DATA
 All four entries below come from page 3's hot-side temperature 27 degrees C column:
 - R_el = 1.50 ohms: module electrical resistance at the listed temperature.
@@ -88,3 +96,6 @@ It cancels from the ratio when G is the same for both directions, so it cannot
 by itself explain unequal slope magnitudes. Peltier transport reverses with
 current, while Joule heating always adds heat: it assists heating and opposes
 cooling. No additional physical measurements are required for this analysis.
+
+5. CONCLUSION
+The measured heating slope is 0.531 °C per PWM count, while the cooling slope versus signed PWM is 0.188 °C per count, giving a ratio of 2.82. Under the symmetric, fixed-current model, this implies that object-face Joule heating is about 47.7% of the Peltier heat-transfer magnitude. Peltier transport reverses with current, whereas Joule heating always adds heat, assisting heating and opposing cooling. PWM makes both contributions proportional to duty cycle, consistent with the approximately linear measured branches. Passive conduction opposes both temperature excursions and cancels from the ratio when its conductance is equal in both directions. The measured ratio is about 10.5% higher than the manufacturer-based prediction of 2.56. Different operating currents, face temperatures, and thermal conditions limit this comparison; the result is a model-based inference rather than a direct heat-flow measurement.

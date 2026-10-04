@@ -188,6 +188,30 @@ $$
 
 The derivation assumes comparable ON-state current and passive conductance in both directions, with approximately constant properties over the fitted ranges.
 
+### C. Signed-duty formulation requested in the assignment
+
+Let $s$ be signed PWM and $u=s/255$ be signed duty cycle, so $D=|u|$. The combined current-dependent heat rate is
+
+$$
+\dot Q_{\mathrm{TEC}}=u\dot Q_P+|u|\dot Q_J.
+$$
+
+For heating ($u\geq0$) and cooling ($u\leq0$), respectively,
+
+$$
+T_{o,h}-T_0=\frac{u(\dot Q_P+\dot Q_J)}{G},\qquad
+T_{o,c}-T_0=\frac{u(\dot Q_P-\dot Q_J)}{G}.
+$$
+
+Thus both signed-duty derivatives are positive in the cooling regime $\dot Q_P>\dot Q_J$:
+
+$$
+\frac{dT_{o,h}}{du}=\frac{\dot Q_P+\dot Q_J}{G},\qquad
+\frac{dT_{o,c}}{du}=\frac{\dot Q_P-\dot Q_J}{G}.
+$$
+
+The signed-PWM slopes are $m_{h,s}=(\dot Q_P+\dot Q_J)/(255G)$ and $m_{c,s}=(\dot Q_P-\dot Q_J)/(255G)$. Their ratio $m_{h,s}/m_{c,s}=2.8245$ gives the same result as the magnitude convention above.
+
 ## 3. Laird maximum-current calculation
 
 ### A. Values, meanings, and conditions
@@ -278,3 +302,7 @@ The graph alone cannot determine how much each effect contributes to the discrep
 When the object is hotter than room temperature, passive heat flows **out of the object**. When the object is colder than room temperature, passive heat flows **into the object**. Thus passive conduction opposes the temperature displacement in both directions.
 
 For approximately symmetric conduction, the same $G$ reduces both temperature excursions and cancels from their slope ratio. **Conduction alone therefore cannot explain unequal heating and cooling slope magnitudes.** Peltier transport changes sign with current, while Joule heating always adds heat to the object: it assists heating and opposes cooling. Unequal effective conductances can modify the measured ratio, but that is beyond the symmetric model used in the derivation.
+
+## 5. Conclusion
+
+The measured heating slope is 0.531 °C per PWM count, while the cooling slope versus signed PWM is 0.188 °C per count, giving a ratio of 2.82. Under the symmetric, fixed-current model, this implies that object-face Joule heating is about 47.7% of the Peltier heat-transfer magnitude. Peltier transport reverses with current, whereas Joule heating always adds heat, assisting heating and opposing cooling. PWM makes both contributions proportional to duty cycle, consistent with the approximately linear measured branches. Passive conduction opposes both temperature excursions and cancels from the ratio when its conductance is equal in both directions. The measured ratio is about 10.5% higher than the manufacturer-based prediction of 2.56. Different operating currents, face temperatures, and thermal conditions limit this comparison; the result is a model-based inference rather than a direct heat-flow measurement.
