@@ -1,12 +1,13 @@
 # A2 — TEC Heating and Cooling Analysis
 
-Kyle Chen and Muhammad Hasan
+Assignment code: A2      
+Module: PHYS39 Module 4   
+Team members: Kyle Chen and Muhammad Hasan   
+Date: October 5, 2026
 
 Final submission: [A2_Chen_Hasan.pdf](A2_Chen_Hasan.pdf). This file preserves the detailed working analysis.
 
-## What Part 5 asks you to produce
 
-Part 5 is a **written analysis using the existing Part 4 graph and Laird data sheet**. No additional physical measurements are required.
 
 | Task | Required output |
 |---|---|
@@ -15,7 +16,6 @@ Part 5 is a **written analysis using the existing Part 4 graph and Laird data sh
 | **3. Use the Laird data** | Four cited values at a hot-side temperature of 27 °C, their meanings and test conditions, and calculations of maximum-current Joule heat, Peltier heat, and the predicted slope ratio. |
 | **4. Interpret the results** | A measured-versus-predicted comparison, reasons they may differ, why full PWM does not guarantee maximum rated current, and an explanation of passive conduction. |
 
-These answers supply the Part 5 material for A2. The separate A2 instructions also require the Part 4 graph and a 100–150-word conclusion in a one-to-two-page PDF; this Markdown document is the longer working analysis.
 
 ## 1. Measured heating and cooling slopes
 
