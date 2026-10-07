@@ -14,8 +14,8 @@ Settling criterion: final-minute temperature range ≤ 0.5 °C and absolute drif
 period, and frequency are N/A. Amplitude would be half the peak-to-peak temperature.
 
 **Highest gain tested: 40 PWM/°C.** Compared with Part 3’s gain-5 result
-(28.9 °C; droop 1.1 °C), gain 40 reached a mean of 29.697 °C with droop
-0.303 °C. Higher gain brought the temperature closer to the setpoint without
+(29.50 °C; screenshot droop 0.50 °C), gain 40 reached a mean of 29.697 °C with droop
+0.303 °C. Gain 40 was closer to the setpoint than the gain-5 screenshot, without
 sustained oscillations or PWM saturation in the observed windows.
 
 **Control stopped; PWM zero confirmed on both outputs.**

@@ -68,59 +68,10 @@ def main():
     fig.text(0.5, 0.02, f'Ambient = {args.ambient:g} °C (verify Module 5 measurement); '
              f'heating χ = {slopes["Heating"]:.4f} °C/PWM count', ha='center', fontsize=9)
     fig.tight_layout(rect=(0, 0.06, 1, 1))
-    for extension in ('png', 'pdf'):
-        fig.savefig(HERE / f'droop_vs_gain.{extension}', dpi=200)
+    fig.savefig(HERE / 'droop_vs_gain.png', dpi=200)
     plt.close(fig)
 
-    report = [
-        '# Part 4: Predict droop from Module 4', '',
-        '## Inputs and assumptions', '',
-        f'- Module 5 ambient: **{args.ambient:g} °C**. The default 27 °C is explicitly marked '
-        'as a placeholder in Part 3; verify it before treating this comparison as final.',
-        '- Setpoint and settled temperatures are read from `../P3_measure_droop_vs_gain/part3_table.md`.',
-        f'- Module 4 heating linear-fit susceptibility: **{slopes["Heating"]:.4f} °C/PWM count**.',
-        f'- Cooling susceptibility magnitude: **{slopes["Cooling"]:.4f} °C/PWM count** '
-        '(used automatically for a setpoint below ambient).',
-        '- PWM counts are the model input P, not electrical power in watts.', '',
-        '## Derivation', '',
-        r'$$T_{ss}=T_{amb}+\chi_{T,h}P,\qquad P=K_p(T_{set}-T_{ss}).$$', '',
-        r'$$T_{set}-T_{ss}=\frac{T_{set}-T_{amb}}{1+\chi_{T,h}K_p},\qquad L=\chi_{T,h}K_p.$$', '',
-        r'The product $L$ is dimensionless: $(\mathrm{°C/PWM})(\mathrm{PWM/°C})=1$.', '',
-        r'$$\frac{T_{set}-T_{ss}}{T_{set}-T_{amb}}=\frac{1}{1+L}.$$', '',
-        'For cooling, use |χ| with the same signed formula, or compare the magnitudes '
-        'of numerator and denominator. Fractional droop is undefined for an ambient setpoint.', '',
-        '## Predictions and measurements', '',
-        '| Kp (PWM/°C) | L | Predicted droop (°C) | Measured droop (°C) | Predicted Tss (°C) | Predicted fraction | Measured fraction |',
-        '|---:|---:|---:|---:|---:|---:|---:|',
-    ]
-    for r in rows:
-        fractions = [f'{value:.3f}' if value is not None else 'undefined' for value in r[10:11] + r[9:10]]
-        report.append(f'| {r[0]:g} | {r[5]:.4f} | {r[6]:.3f} | {r[7]:.3f} | {r[8]:.3f} | {fractions[0]} | {fractions[1]} |')
-    report.extend(['', '![Predicted and measured droop](droop_vs_gain.png)', '',
-                   '## Interpretation and data checks', '',
-                   'Both the model and the measurements show decreasing droop as gain increases. '
-                   'For L ≪ 1, nearly all initial error remains; at L = 1, half remains; '
-                   'for L ≫ 1, the fraction approaches 1/L.', '',
-                   'The model assumes a steady state, a linear response, a consistent ambient '
-                   'temperature, and no PWM saturation. Rounded integer PWM and experimental '
-                   'drift can cause deviations. Module 4 recorded temperature ranges do not '
-                   'establish statistical uncertainty or a settling criterion.', '',
-                   'Part 3 still contains placeholder χ = 0.10. Its stated required PWM of 80 '
-                   'is inconsistent with its stated 3 °C initial error and that susceptibility '
-                   '(which imply 30 counts). With the measured heating slope and a 3 °C '
-                   f'initial error, the model requires {3 / slopes["Heating"]:.2f} counts to reach the setpoint.', '',
-                   'Part 3’s initial PWM column also disagrees with Kp × 3 for gains 4 and 5 '
-                   '(expected 12 and 15). Predictions here use the gains and temperatures directly.', ''])
-    if any(r[3] == 'Heating' and r[2] < args.ambient for r in rows):
-        report.extend(['Some measured heating temperatures are below the assumed ambient. '
-                       'The positive heating-susceptibility model cannot explain those points; '
-                       'verify the actual Module 5 ambient, settled readings, and output direction. '
-                       'Do not substitute Module 4’s ambient for an unmeasured Module 5 ambient.', ''])
-    report.extend(['## Regenerate', '', '```sh', 'python3 predict_droop.py --ambient 27',
-                   '```', '', 'Replace 27 with the actual Module 5 ambient. Outputs: this report, '
-                   '`droop_predictions.csv`, and `droop_vs_gain.png` / `.pdf`.', ''])
-    (HERE / 'PART4_PREDICTED_DROOP.md').write_text('\n'.join(report))
-    print(f'Saved Part 4 predictions, report, and PNG/PDF plot to {HERE}')
+    print(f'Saved Part 4 predictions and PNG plot to {HERE}')
 
 
 if __name__ == '__main__':
