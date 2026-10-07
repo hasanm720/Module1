@@ -170,10 +170,10 @@ Module 5 commands signed PWM according to $u=K_p(T_{set}-T)$. Positive output se
 | 2: Gain selection | [Module 5 note](docs/module_notes/module_05_p_control.md) | Loop-gain crossover and saturation calculations; instructor-approved range still needs confirmation. |
 | 3: Droop versus gain | [part3_table.md](code/module5/P3_measure_droop_vs_gain/part3_table.md), [screenshots](docs/images/module5/P3_measure_droop_vs_gain/) | Gains 1–5, transcribed screenshot temperatures, measured droop, and reported/commanded PWM. |
 | 4: Predicted droop | [predict_droop.py](code/module5/P4_predict_droop/predict_droop.py) | Uses the Module 4 directional fit and Part 3 table; writes [droop_predictions.csv](code/module5/P4_predict_droop/droop_predictions.csv) and [droop_vs_gain.png](code/module5/P4_predict_droop/droop_vs_gain.png). |
-| 5: High-gain response | [part5_high_gain_response.md](code/module5/P5_high_gain_response/part5_high_gain_response.md), [raw CSV](code/module5/P5_high_gain_response/high_gain_20261005_110725.csv), [plot_strip_charts.py](code/module5/P5_high_gain_response/plot_strip_charts.py) | Gains 10, 20, 30, and 40; final-minute statistics and reconstructed PNG strip charts. |
+| 5: High-gain response | [part5_high_gain_response.md](code/module5/P5_high_gain_response/part5_high_gain_response.md), [raw CSV](code/module5/P5_high_gain_response/high_gain_20261005_110725.csv), [plot_strip_charts.py](code/module5/P5_high_gain_response/plot_strip_charts.py) | Current gains 20, 30 (retained), 40, and 50; final-minute statistics and PNG traces. Original gain-10 evidence remains preserved. |
 | 6: Interpret and preserve | [module_05_p_control.md](docs/module_notes/module_05_p_control.md) | One-lump droop derivation, susceptibility and capacity interpretation, loop-gain comparison, C4 preparation, and evidence provenance for A3. |
 
-At the 30 °C setpoint, the gain-1 through gain-5 screenshot temperatures are **28.49, 29.46, 29.57, 29.52, and 29.50 °C**. These are individual live readouts, not independently verified steady-state means. Part 5 reports no sustained oscillations in the recorded windows; gain 40 reached a final-minute mean of **29.697 °C**, with **0.303 °C droop**.
+At the 30 °C setpoint, the gain-1 through gain-5 screenshot temperatures are **28.49, 29.46, 29.57, 29.52, and 29.50 °C**. These are individual live readouts, not independently verified steady-state means. Part 5 uses October 7 retests at gains 20, 40, and 50, retaining the October 5 gain-30 run. Gain 40 showed an oscillatory burst, while gain 50 showed smaller irregular reversals with uncertain physical origin. The highest tested gain is **50**, with final-minute mean **29.743 °C** and **0.257 °C droop**.
 
 The default **27 °C ambient is provisional**. Verify the measured ambient before finalizing predicted/fractional droop. The note identifies additional unresolved lab provenance, including the high-gain acquisition program. With the heating fit, $L=0.5311K_p$; none of the tested gains satisfies $L\ll1$.
 
@@ -212,3 +212,7 @@ Preserved CSV copies are in [data/module_05/](data/module_05/) and PNG copies in
 - `docs/other_files/module4/` — Module 4 calibration tables and susceptibility results
 - `docs/images/` — Circuit photos and measurement screenshots, organized by module/part
 - `docs/module_notes/` — Written module notes/evidence
+
+### Module 5 October 7 retests
+
+[New supervised 30 °C tests at gains 20, 40, and 50](code/module5/P5_high_gain_response/part5_retest_20261007.md) preserve the original gain-30 data. The highest tested gain is now 50, with final-minute mean 29.743 °C. Gain 40 showed an oscillatory burst; gain 50 showed small irregular reversals with uncertain physical origin. New raw data and PNG traces are preserved separately, with the acquisition script and analysis limits linked in the retest note.

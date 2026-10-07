@@ -64,7 +64,7 @@ Thermal capacity sets how much stored energy must change during a transient. At 
 
 ## 3. Loop gain and fractional-droop comparison
 
-Use $L=0.5311K_p$ for the heating runs. The table below assumes $T_{set}=30$ °C and **provisional $T_{amb}=27$ °C**, so the measured fractional droop is $(30-T_{ss})/3$. Part 3 values are individual live readouts transcribed from the five screenshots, not verified steady-state averages; Part 5 temperatures are arithmetic means over each gain's final 60 seconds in the CSV. The same ambient has not been verified for either set of runs, so the measured fractions and agreement assessment remain provisional. $L$ itself does not depend on this ambient assumption.
+Use $L=0.5311K_p$ for the heating runs. The table below assumes $T_{set}=30$ °C and **provisional $T_{amb}=27$ °C**, so the measured fractional droop is $(30-T_{ss})/3$. Part 3 values are individual live readouts transcribed from the five screenshots, not verified steady-state averages; Part 5 temperatures are final-60-s means: October 7 retests for gains 20, 40, and 50; retained October 5 data for gain 30 and earlier supporting gain 10. Days and thermal histories differ. The same ambient has not been verified for either set of runs, so the measured fractions and agreement assessment remain provisional. $L$ itself does not depend on this ambient assumption.
 
 | $K_p$ (PWM/°C) | Measured $T_{ss}$ or final-minute mean (°C) | $L$ | Measured fractional droop | Predicted $1/(1+L)$ | Source |
 |---:|---:|---:|---:|---:|---|
@@ -73,12 +73,13 @@ Use $L=0.5311K_p$ for the heating runs. The table below assumes $T_{set}=30$ °C
 | 3 | 29.570 | 1.5933 | 0.143 | 0.386 | Part 3 screenshot |
 | 4 | 29.520 | 2.1244 | 0.160 | 0.320 | Part 3 screenshot |
 | 5 | 29.500 | 2.6555 | 0.167 | 0.274 | Part 3 screenshot |
-| 10 | 28.893 | 5.3110 | 0.369 | 0.158 | Part 5 |
-| 20 | 29.422 | 10.6220 | 0.193 | 0.086 | Part 5 |
-| 30 | 29.591 | 15.9330 | 0.136 | 0.059 | Part 5 |
-| 40 | 29.697 | 21.2440 | 0.101 | 0.045 | Part 5 |
+| 10 | 28.893 | 5.3110 | 0.369 | 0.158 | October 5 supporting run |
+| 20 | 29.386 | 10.6220 | 0.205 | 0.086 | October 7 retest |
+| 30 | 29.591 | 15.9330 | 0.136 | 0.059 | Retained October 5 run |
+| 40 | 29.682 | 21.2440 | 0.106 | 0.045 | October 7 retest |
+| 50 | 29.743 | 26.5550 | 0.086 | 0.036 | October 7 retest |
 
-Small gain means **$L\ll1$**, not merely a small numerical $K_p$. The crossover $L=1$ is at $K_p=1/0.5311\approx1.883$ PWM/°C. Gain 1 has $L=0.5311$: it is below crossover but not much less than one. **None of the measured gains is firmly in the small-loop-gain regime.** For example, requiring $L\le0.1$ would require $K_p\le0.1883$ PWM/°C. Gains 20–40 have $L>10$ and lie in the large-loop-gain regime, where predicted fractional droop approaches $1/L$.
+Small gain means **$L\ll1$**, not merely a small numerical $K_p$. The crossover $L=1$ is at $K_p=1/0.5311\approx1.883$ PWM/°C. Gain 1 has $L=0.5311$: it is below crossover but not much less than one. **None of the measured gains is firmly in the small-loop-gain regime.** For example, requiring $L\le0.1$ would require $K_p\le0.1883$ PWM/°C. Gains 20–50 have $L>10$ and lie in the large-loop-gain regime, where predicted fractional droop approaches $1/L$.
 
 The model predicts decreasing droop with gain. Screenshot droop decreases from 1.51 °C at gain 1 to 0.43 °C at gain 3, then increases slightly to 0.48 and 0.50 °C at gains 4 and 5. Under the provisional ambient assumption, screenshot droop is smaller than predicted at all five low gains, whereas Part 5 final-minute droop is larger than predicted. The gain-10 mean is also colder than the gain-5 screenshot, so the combined observations are not a monotonic steady-state series. The screenshots and high-gain log describe different observation windows and thermal histories. All screenshot temperatures are above the assumed 27 °C ambient. Verify actual ambient and settling before treating these observations as a quantitative steady-state test.
 
@@ -90,11 +91,20 @@ The Part 4 droop graph above is preserved for A3. Its prediction uses the provis
 
 ## First-order expectation and the observed high-gain response
 
-For positive $C$, $H$, $P_u$, and $K_p$, the ideal model has one decaying exponential and cannot sustain oscillations or overshoot its own steady-state temperature from a fixed initial condition. Our Part 5 record reports initial overshoot at gain 10, then settling; gains 20–40 rise toward plateaus with small fluctuations. No sustained oscillations were established within the recorded windows. This supports stable observed operation but does not prove that arbitrarily higher gains would remain stable.
+For positive $C$, $H$, $P_u$, and $K_p$, the ideal one-lump model has one decaying exponential and cannot sustain oscillations or overshoot its steady-state temperature from a fixed initial condition. Real traces show departures from this model: retained gain 30 has small recurring irregular waves (amplitude ≈0.01–0.015 °C, representative period ≈20 s); the October 7 gain-40 retest has a larger oscillatory burst (local amplitude ≈0.09 °C and median peak spacing ≈1.70 s over 55–100 s); gain 50 has small irregular reversals (local amplitude ≈0.015 °C and median detected spacing ≈3.96 s). A perfect sine wave is not required to describe oscillatory behavior.
 
-The initial overshoot is a departure from the ideal one-lump model. Thermal delay between the TEC and thermistor, additional thermal masses, discrete sampling/actuation, and sensor noise are plausible contributors. PWM saturation can also alter responses in general, but the recorded Part 5 PWM range is 0–64 counts, well below the 255-count limit, so saturation is not supported as the explanation here. The gain changes occur in one continuous experiment, so later runs begin from the preceding thermal state rather than a fresh ambient equilibrium.
+These quantities use different methods and observation windows. Gain 30 uses 5 s bin means; gains 40 and 50 use threshold-confirmed raw extrema. Consequently the periods cannot be used to claim a simple gain-versus-frequency law. Gain 40's burst is not proof of a constant-amplitude sustained instability. Gains 30 and 50 have small variations near the 0.01 °C reporting increment; their physical origin is unresolved. Gain 20 has no clear coherent wave train. Earlier gain 10 has an isolated spike and transient reversals, not an established sustained oscillation.
 
-The Part 5 settling criterion is a final-minute temperature range ≤0.5 °C and absolute drift ≤0.002 °C/s. The highest tested gain was 40 PWM/°C; its final-minute mean was 29.697 °C, giving dimensional droop 0.303 °C. Oscillation amplitude, period, and frequency are N/A because sustained oscillations were not established. If needed later, define amplitude as half the peak-to-peak temperature of a sustained oscillation.
+Thermal delay, multiple thermal masses, discrete sampling/actuation, sensor noise, and PWM quantization can contribute to departures from the one-lump model. No recorded retest PWM reached 255; reported ranges were 0–142, 4–24, and 12–16 at gains 20, 40, and 50. Thus saturation is not supported as the cause. The retests were consecutive, so later gains began from the previous thermal state.
+
+All three retests pass the final-minute range/drift check, but **bounded temperature does not establish settling**. Gain 20 appears approximately settled; retained gain 30 is marked No because recurring waves persist in the recorded window. Gain 40 is marked Uncertain because its oscillatory burst diminishes, and gain 50 is Uncertain because physical waves versus measurement noise remain unresolved. Final-minute means for oscillatory or uncertain runs are observation-window averages, not verified steady-state temperatures. The highest tested gain is **50 PWM/°C**, with final-minute mean **29.743 °C** and droop **0.257 °C**. Shutdown telemetry confirmed both outputs at zero. See the [main Part 5 table and wave methods](../../code/module5/P5_high_gain_response/part5_high_gain_response.md) and [detailed retest note](../../code/module5/P5_high_gain_response/part5_retest_20261007.md).
+
+![Retained gain-30 trace](../figures/module_05/kp_30_strip_chart.png)
+
+![Retested gain-40 trace](../figures/module_05/retest_20261007/kp_40_strip_chart.png)
+
+![Retested gain-50 trace](../figures/module_05/retest_20261007/kp_50_strip_chart.png)
+
 
 ## C4 preparation
 
@@ -111,8 +121,9 @@ Preserved copies of available CSVs are in [`data/module_05/`](../../data/module_
 |---|---|---|
 | Dimensional low-gain droop table | [`part3_table.md`](../../code/module5/P3_measure_droop_vs_gain/part3_table.md), gains 1–5 | Original table and screenshots `p=1.png` through `p=5.png` in the figures folder |
 | Predicted and measured droop | [`predict_droop.py`](../../code/module5/P4_predict_droop/predict_droop.py), Part 3 table and Module 4 susceptibility | `droop_predictions.csv` in the data folder; `droop_vs_gain.png` in the figures folder |
-| High-gain response table | [`part5_high_gain_response.md`](../../code/module5/P5_high_gain_response/part5_high_gain_response.md) | Original table; `high_gain_20261005_110725.csv` in the data folder |
-| Reconstructed high-gain strip charts | [`plot_strip_charts.py`](../../code/module5/P5_high_gain_response/plot_strip_charts.py), `high_gain_20261005_110725.csv` | `kp_10_strip_chart.png`, `kp_20_strip_chart.png`, `kp_30_strip_chart.png`, `kp_40_strip_chart.png` in the figures folder |
+| High-gain response table | [`part5_high_gain_response.md`](../../code/module5/P5_high_gain_response/part5_high_gain_response.md) | Updated table; `high_gain_retest_20261007_101645_660586.csv`, `kp30_original_20261005.csv`, and original full log in the data folder |
+| Reconstructed high-gain strip charts | [`plot_strip_charts.py`](../../code/module5/P5_high_gain_response/plot_strip_charts.py), `high_gain_20261005_110725.csv` and new retest CSV | New gains 20, 40, 50 in `docs/figures/module_05/retest_20261007/`; retained gain 30 and earlier traces in the parent figures folder |
+| New high-gain acquisition | [`run_high_gain_tests.py`](../../code/module5/P5_high_gain_response/run_high_gain_tests.py) | October 7 retest CSV; confirmed zero-output shutdown observed during acquisition |
 | Python P-only controller | [`p_control_gui.py`](../../code/module5/P1_P-only_control/p_control_gui.py) and [`control_logic.py`](../../code/module5/P1_P-only_control/control_logic.py) | Existing source files |
 | Matching Arduino sketch | [`P1_arduino_control.ino`](../../code/module5/P1_P-only_control/P1_arduino_control/P1_arduino_control.ino) | Existing source file |
 | Other GUI logs | `p_control_20261005_093350_639427.csv`, `p_control_20261005_093841_003862.csv` | Copies in the data folder; the first contains only a header |
@@ -124,9 +135,9 @@ The strip charts are reconstructions from recorded telemetry, not live GUI scree
 
 - Record actual Module 5 ambient temperature for the relevant runs, then update fractional droop and the Part 4 graph. Part 3 currently labels 27 °C as a placeholder.
 - The saved log documents a low-gain heating sign check, as detailed below. A separate cooling sign test at low gain was not identified.
-- Preserve the instructor-approved gain range and its justification. Tested gains were 1–5 and 10, 20, 30, 40 PWM/°C. A saturation check uses $K_p|e|\le255$, but this alone does not establish thermal safety or instructor approval. At gain 10 the logged initial error was 6.39 °C, implying 63.9 counts, consistent with the 64-count command. Later gains started closer to target.
-- The high-gain log is preserved, but a dedicated acquisition script for that CSV schema was not found. Confirm the exact acquisition code/version used; the current GUI logs a different schema. The populated GUI log contains the low-gain runs, as indexed below; the Part 3 table now uses the screenshot live readouts from the later low-gain runs.
-- The Part 5 note reports shutdown and zero output on both pins; preserve direct shutdown evidence if available. These notes do not independently verify that hardware action.
+- Preserve the instructor-approved gain range and its justification. Tested gains were 1–5 and 10, 20, 30, 40, 50 PWM/°C. A saturation check uses $K_p|e|\le255$, but this alone does not establish thermal safety or instructor approval. At gain 10 the logged initial error was 6.39 °C, implying 63.9 counts, consistent with the 64-count command. Later gains started closer to target.
+- The original October 5 high-gain log is preserved, but its exact acquisition code is unverified; October 7 acquisition is preserved in `run_high_gain_tests.py`. Confirm the exact acquisition code/version used; the current GUI logs a different schema. The populated GUI log contains the low-gain runs, as indexed below; the Part 3 table now uses the screenshot live readouts from the later low-gain runs.
+- October 7 shutdown telemetry confirmed zero output on both pins; the original October 5 shutdown claim remains unverified by these notes.
 - These notes and copied artifacts are local. A Git commit/push and verification of the remote checkpoint have not been performed as part of this analysis.
 
 
@@ -160,8 +171,9 @@ The Part 3 table has been corrected using screenshot readouts: gain 1 = 28.49 °
 
 ### Gain-range calculation
 
-The measured heating susceptibility gives crossover $K_p=1/\chi=1.883$ PWM/°C. The tested gains cover $L=0.5311$ through 21.244, spanning below crossover to strong feedback. At the largest gain, avoiding initial PWM saturation requires $|e|\le255/40=6.375$ °C. Starting gain 40 directly from the Part 5 initial temperature 23.61 °C would give $40(30-23.61)=255.6$ counts and saturate. The experiment instead increased gains after warming, keeping commands below the limit. This calculation explains why staged gain increases were useful; actual instructor approval cannot be inferred from telemetry.
+The measured heating susceptibility gives crossover $K_p=1/\chi=1.883$ PWM/°C. The tested gains cover $L=0.5311$ through **26.555**, spanning below crossover to strong feedback. At the largest gain, avoiding initial PWM saturation requires $|e|<255/50=5.10$ °C. Starting gain 50 from the retest's initial 22.89 °C would request 355.5 counts and saturate. Instead gain 20 warmed the apparatus before gain 40 and gain 50; the first gain-50 reading was approximately 29.67 °C, requiring about 16.5 counts. This explains staged increases, but does not establish instructor approval.
 
 ### Acquisition provenance limits
 
-The low-gain CSV column names match the writer in `p_control_gui.py`, which computes commands using `control_logic.py` and reads the telemetry format of `P1_arduino_control.ino`. This establishes the matching source implementation; the CSV does not contain a code version or commit hash. The high-gain CSV has a distinct schema (`gain_elapsed_s`, among other differences) with no matching acquisition writer in the repository. The exact high-gain acquisition program must be supplied or identified from the lab session; recreating a writer now would not establish historical provenance.
+The low-gain CSV column names match the writer in `p_control_gui.py`, which computes commands using `control_logic.py` and reads the telemetry format of `P1_arduino_control.ino`. This establishes the matching source implementation; the CSV does not contain a code version or commit hash. The original October 5 high-gain CSV has a distinct schema (`gain_elapsed_s`, among other differences) with no matching acquisition writer in the repository. The exact high-gain acquisition program must be supplied or identified from the lab session; recreating a writer now would not establish historical provenance.
+

@@ -3,6 +3,7 @@
 Run: python3 code/module5/P5_high_gain_response/plot_strip_charts.py
 Saves one PNG per recorded gain in strip_charts/ beside this script.
 """
+import argparse
 import csv
 from collections import defaultdict
 from pathlib import Path
@@ -15,12 +16,16 @@ HERE = Path(__file__).resolve().parent
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--input', type=Path, default=HERE / 'high_gain_20261005_110725.csv')
+    parser.add_argument('--output-dir', type=Path, default=HERE / 'strip_charts')
+    args = parser.parse_args()
     runs = defaultdict(list)
-    with (HERE / 'high_gain_20261005_110725.csv').open(newline='') as source:
+    with args.input.open(newline='') as source:
         for row in csv.DictReader(source):
             runs[float(row['kp_pwm_per_C'])].append(row)
-    output = HERE / 'strip_charts'
-    output.mkdir(exist_ok=True)
+    output = args.output_dir
+    output.mkdir(parents=True, exist_ok=True)
     for gain, rows in sorted(runs.items()):
         time = [float(row['gain_elapsed_s']) for row in rows]
         temperature = [float(row['temperature_C']) for row in rows]
