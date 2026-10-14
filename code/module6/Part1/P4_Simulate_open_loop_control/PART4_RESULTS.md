@@ -1,150 +1,123 @@
-# Module 6 Part 4 — One-lump open-loop and P simulations
+# Module 6 Part 4 — Results
 
-**Completed the numerical guided exercises using the provided simulation's
-`simulate()` and `advance_model()` functions. No Arduino power is used.**
+## 1. Heating and cooling
 
-## 1. Equations and implementation
+Resistive heat is produced in both directions. It helps heating but reduces
+cooling, so +25 PWM heats more than −25 PWM cools.
 
-The prepared model advances temperature with forward Euler:
+Default settings: measured mode, ambient/initial temperature 22 °C,
+τ = 80 s, Δt = 0.05 s. Predict T_ss = T_amb + χu.
 
-$$T_{n+1}=T_n+\frac{\Delta t}{C}[P_u u-H(T_n-T_{amb})]
-=T_n+\frac{\Delta t}{\tau}(T_{amb}+\chi u-T_n).$$
-
-`advance_model()` computes applied TEC power, subtracts passive heat loss,
-divides by C, then multiplies by dt. `active_tec_coefficient()` chooses the
-heating or cooling coefficient according to signed u. This analysis imports
-that implementation rather than replacing its physics.
-
-## 2. Required default open-loop cases
-
-Settings: one_lump, measured, open_loop; ambient/initial 22 °C,
-χ_h=0.46 °C/PWM, χ_c=0.23 °C/PWM, τ=80 s, dt=0.05 s, PWM limit ±255.
-Predictions use **T_ss=T_amb+χu** before numerical integration.
-
-| Signed PWM | Predicted equilibrium (°C) | Simulated at 1200 s (°C) | Recovered χ (°C/PWM) |
+| PWM | Predicted T_ss (°C) | Simulated at 1200 s (°C) | χ (°C/PWM) |
 |---:|---:|---:|---:|
 | +25 | 33.500 | 33.500 | 0.46000 |
 | -25 | 16.250 | 16.250 | 0.23000 |
 | -50 | 10.500 | 10.500 | 0.23000 |
 
-The recovered slopes agree with χ_h=0.46 and χ_c=0.23, giving r=2.
-Equal positive/negative PWM produce unequal excursions because reversible
-Peltier transport changes sign while Joule heating contributes in both
-directions: it aids heating and offsets cooling. The maximum Euler departure
-from the exact open-loop exponential is 0.0013 °C.
+Calculate χ = (T_ss − T_amb)/u:
 
-![Default open-loop cases](results/01_default_open_loop.png)
+- χ_h = (33.5 − 22)/25 = **0.46 °C/PWM**.
+- χ_c = (16.25 − 22)/(−25) = **0.23 °C/PWM**.
+- At −50 PWM: χ_c = (10.5 − 22)/(−50) = **0.23 °C/PWM**.
+- Ratio r = 0.46/0.23 = **2**.
 
-## 3. Double thermal capacitance only
+These agree with the simulation's displayed susceptibilities.
 
-Hold +25 PWM and keep H, P_u,c and r fixed. The default measured-parameter
-inversion gives C=130.946 J/°C. Switch to direct
-constants and double C to 261.893 J/°C.
+![Open-loop cases](results/01_default_open_loop.png)
 
-**Prediction and numerical result:** equilibrium stays at 33.5 °C, while
-τ=C/H doubles from 80 to 160 s. More heat capacity requires more energy to
-change temperature; it does not change the final zero-storage heat balance.
-Return to measured parameters for the following comparisons.
+## 2. Double thermal capacitance
 
-![Thermal mass comparison](results/02_double_thermal_mass.png)
+Keep **+25 PWM** fixed. Select `direct constants` and double C from
+**130.946 to 261.893 J/°C**.
+Leave H, P_u,c, and r unchanged.
 
-## 4. Measured-parameter simulation settings
+**Prediction:** T_ss stays at **33.5 °C**; τ = C/H doubles from **80 to 160 s**.
+**Simulation:** both predictions agree.
 
-| Parameter | Value and source |
-|---|---|
-| χ_h | 0.5311 °C/PWM; Module 4 heating fit |
-| χ_c | 0.1878 °C/PWM; Module 4 cooling fit |
-| Ratio r | 2.8280 |
-| τ | 91.69 s; fresh Part 3 63% measurement |
-| Heating ambient | 24.220 °C; late zero-PWM baseline mean |
-| Heating initial temperature | 24.210 °C |
-| Heating command | +5 PWM; matches the fresh measurement |
-| Cooling ambient | 21.965 °C; Module 4 zero-PWM range midpoint |
-| Cooling initial temperature | 9.940 °C; first recorded sample |
-| Cooling command | −47 PWM; matches the archived segment |
-| dt | 0.05 s; checked again at 0.025 s |
-| TEC module resistance | 1.50 Ω; supplied Laird datasheet |
-| PWM clamp | ±255 counts |
+More thermal mass needs more energy to change temperature, so the response is
+slower. At steady state, heat entering equals heat leaving; C does not change
+that balance or the final temperature.
 
-**ON-state voltage has not been supplied.** The 12 V program default is provisional, not a measurement. The temperature predictions remain defined by measured χ and τ; absolute C, H and P_u values require the actual voltage.
+Return to `measured` for the following runs.
 
-Temperature dynamics use P_u/H=χ and C/H=τ. At fixed χ and τ, changing the
-voltage used in the inversion rescales dimensional constants together and
-does not change these one-lump temperature trajectories. It does affect
-the inferred physical power and capacitance.
+![Double thermal capacitance](results/02_double_thermal_mass.png)
 
-## 5. Experiment versus model
+## 3. Experimental settings
 
-**Fresh heating:** predicted T_ss=26.875 °C; recorded
-final-60-s mean=26.366 °C, so the prediction is
-+0.510 °C relative to the measurement. Full-trace
-RMSE is 0.498 °C. The same heating trace supplied τ, so transient
-agreement is not an independent validation. The susceptibility comes from
-the earlier Module 4 measurement and has not been refitted here.
+Use **+5 PWM heating** and **−47 PWM cooling**, matching the recordings.
+TEC voltage: **12 V** (assumed ON-state value). TEC resistance: **1.50 Ω**.
 
-**Archived cooling:** predicted T_ss=13.138 °C; final-60-s
-mean=13.472 °C. This segment runs from Arduino time
-2857.85 to 3356.2 s. Although u is negative,
-temperature rises because the initial block is colder than the equilibrium
-for −47 PWM after a stronger cooling command. Command direction alone does
-not determine the sign of dT/dt.
+| Setting | Heating | Cooling |
+|---|---:|---:|
+| Ambient | 24.220 °C | 21.965 °C |
+| Initial temperature | 24.210 °C | 9.940 °C |
+| χ | 0.5311 °C/PWM | 0.1878 °C/PWM |
 
-**Cooling evidence limitation:** the current Module 4 sketch averages 500 raw
-readings. This archived trace is an exploratory comparison, not a verified
-1,000-reading measurement. A qualifying cooling trace is still needed if
-the instructor requires that acquisition rule for the Part 4 comparison.
-The newly measured τ is also being carried across dates and directions as
-a one-lump approximation. No fresh cooling run was performed here.
+| Parameter | Value |
+|---|---:|
+| C | 100.549 J/°C |
+| H | 1.0966 W/°C |
+| P_u,c | 0.20595 W/PWM |
+| r | 2.8280 (dimensionless) |
+| τ | 91.69 s |
+| Δt | 0.05 s |
 
-The model assumes one uniform thermal temperature, fixed ambient and constant
-susceptibility. The fresh recording shows local deviations and a lower final
-heating temperature; heat transport, changing ambient/contact conditions and
-direction/temperature dependence of effective TEC power can explain departures.
-These data do not independently identify which mechanism dominates.
+χ comes from Module 4; τ comes from Part 3 heating and is used for both directions.
+The physical constants use the voltage above.
 
-![Measured traces and model predictions](results/03_experiment_comparison.png)
+## 4. Simulation versus experiment
 
-## 6. Numerical time-step check
+| Run | Predicted T_ss | Measured final-60-s mean |
+|---|---:|---:|
+| Heating, +5 PWM | 26.875 °C | 26.366 °C |
+| Cooling, −47 PWM | 13.138 °C | 13.472 °C |
 
-dt/τ=0.000545. Halving dt from 0.05 to 0.025 s changes the fresh
-heating prediction by at most **0.000134 °C** at common sample times.
-That is below the recorded 0.01 °C reporting increment. Numerical integration
-error is small compared with the experiment/model disagreement.
+Heating is predicted 0.510 °C too high; full-trace RMSE
+is 0.498 °C. The heating trace supplied τ, so its response-time
+agreement is not an independent test.
 
-## 7. Continue with P control
+The cooling trace warms because it starts below the steady temperature for
+−47 PWM. Heat entering from the surroundings initially exceeds TEC cooling.
 
-Keep the measured physical parameters, initial temperature and 30 °C target;
-use Kp=10 from Module 5 and the larger Kp=20. Predictions are
+The model assumes uniform temperature and constant conditions. Temperature
+gradients, changing ambient temperature, and changing thermal contact or TEC
+performance can explain the differences; these data do not identify the main cause.
+
+![Simulation and measured traces](results/03_experiment_comparison.png)
+
+## 5. Time-step check
+
+**Δt = 0.05 s ≪ τ = 91.69 s.** Halving Δt to 0.025 s changes the heating
+prediction by at most **0.000134 °C**, well below the 0.01 °C reporting
+increment. The result does not appreciably change.
+
+## 6. P control
+
+Select `p`; keep the measured parameters, initial temperature, and **30 °C** target.
+Use **Kp = 10 from Module 5**, then **Kp = 20**; Ki = 0.
+
+Before each run, predict:
 
 $$\mathrm{droop}=\frac{T_{set}-T_{amb}}{1+\chi_hK_p},
 \qquad \tau_{cl}=\frac{\tau}{1+\chi_hK_p}.$$
 
-- **Kp=10, Ki=0:** predicted droop 0.916 °C, τ_cl=14.53 s and T_ss=29.084 °C. Euler endpoint agrees within 0.00001 °C; maximum transient difference from the analytic exponential is 0.0031 °C.
-- **Kp=20, Ki=0:** predicted droop 0.497 °C, τ_cl=7.89 s and T_ss=29.503 °C. Euler endpoint agrees within 0.00001 °C; maximum transient difference from the analytic exponential is 0.0062 °C.
+- **Kp=10, Ki=0:** predicted droop 0.916 °C, time constant 14.53 s, and final temperature 29.084 °C.
+- **Kp=20, Ki=0:** predicted droop 0.497 °C, time constant 7.89 s, and final temperature 29.503 °C.
 
-Increasing Kp reduces both droop and response time. These simulated traces
-are monotonic and remain unsaturated; they do not reproduce high-gain
-experimental ringing. Settings and agreement are recorded here without
-creating another P-control data table.
+**Both predictions agree with the simulation:** final temperatures agree within
+0.00001 °C, and the simulated curves differ from the predicted exponential by
+less than 0.01 °C. Increasing Kp reduces both droop and response time.
+Droop is the final temperature shortfall below the target.
 
-![P-control gain comparison](results/04_p_control.png)
+![P-control comparison](results/04_p_control.png)
 
-## Files and how to reproduce
-
-- [Prepared interactive simulation](Lab_6_7_modeling_tec.py)
-- [Analysis runner](run_part4.py)
-- [Fresh heating CSV](../P3_estimate_tau/data/open_loop_step_20261013_113417_759949.csv)
-- [Module 4 susceptibility results](../../../../docs/other_files/module4/P4_Temperature_susceptibility/susceptibility_results.md)
-- [Archived cooling CSV](../../../module4/P1_Shutdown_Control/tec_safety_data.csv)
-
-From the PHYS 39a workspace:
+## Reproduce
 
 ```sh
-python PHYS39A_instrumentation/code/module6/Part1/P4_Simulate_open_loop_control/run_part4.py
+python PHYS39A_instrumentation/code/module6/Part1/P4_Simulate_open_loop_control/run_part4.py --voltage 12
 ```
 
-Supply `--voltage YOUR_MEASURED_VALUE` to replace the provisional voltage.
-For the interactive prepared GUI, run the same path with
-`Lab_6_7_modeling_tec.py` instead of `run_part4.py`; select one_lump and measured
-and enter the values above. The GUI still starts with its original defaults.
-All curves in this report are explicitly simulations or labeled recordings.
+- [Simulation](Lab_6_7_modeling_tec.py) · [Runner](run_part4.py)
+- [Heating data](../P3_estimate_tau/data/open_loop_step_20261013_113417_759949.csv)
+- [Cooling data](../../../module4/P1_Shutdown_Control/tec_safety_data.csv)
+- [Module 4 fits](../../../../docs/other_files/module4/P4_Temperature_susceptibility/susceptibility_results.md)

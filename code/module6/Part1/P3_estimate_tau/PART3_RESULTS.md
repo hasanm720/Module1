@@ -43,15 +43,6 @@ the lab uses the practical approximation 0.63.
 
 No feedback correction is required. **τ ≈ 91.69 s.**
 
-## Annotated measurement plot
-
-![Recorded temperature, 63% threshold, crossing time and signed PWM](results/open_loop_step_20261013_113417_759949_kp_0_63_percent.png)
-
-The orange horizontal line marks T₆₃. The purple vertical line marks the
-first crossing. The green shaded region identifies the final averaging
-window. The lower panel confirms the constant applied PWM during the step.
-All recorded excursions are retained; no temperature points are filtered out.
-
 ## Uncertainty and limitations
 
 | Check | Result |
@@ -77,17 +68,3 @@ The primary result uses the first sampled crossing, as specified in the lab.
 Different thresholds can cross at exactly the same recorded sample. The last
 column interpolates between the two bracketing readings to show smaller
 differences; it assumes a locally linear rise and adds no measurement precision.
-
-## Data and reproducibility
-
-Source recording: [open_loop_step_20261013_113417_759949.csv](data/open_loop_step_20261013_113417_759949.csv)
-
-- [Annotated PNG](results/open_loop_step_20261013_113417_759949_kp_0_63_percent.png)
-- [Worked analysis and independent cross-check](README.md)
-
-Re-run `estimate_tau.py` to reproduce the calculation. Use `--export-data`
-only if you need an additional JSON calculation or selected-trace CSV.
-
-The matching Module 5 Arduino sketch averages 1,000 raw ADC readings before
-temperature conversion. The CSV itself does not record the firmware version
-or averaging count; confirm that the matching sketch was used for this run.
