@@ -1,0 +1,57 @@
+qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass
+qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass
+qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass
+qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass
+CSV log: /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module5/P1_P-only_control/logs/p_control_20261014_104259_637994.csv
+AUTO STAGE: run 1, Baseline at 28 °C
+AUTO RUN 1: P-only Kp=1 Ki=0; /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks/data/run1_20261014_104302_832692.csv
+AUTO END STAGE: Baseline at 28 °C; elapsed=361.0; settled=True
+AUTO STAGE: run 1, Upward step to 30 °C
+qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass
+qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass
+qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass
+qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass
+CSV log: /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module5/P1_P-only_control/logs/p_control_20261014_105026_710534.csv
+AUTO STAGE: run 1, Baseline at 28 °C
+AUTO RUN 1: P-only Kp=5 Ki=0; /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks/data/screening_run1_20261014_105029_872226.csv
+AUTO END STAGE: Baseline at 28 °C; elapsed=11.0; settled=False
+AUTO STAGE: run 1, Upward step to 30 °C
+AUTO END STAGE: Upward step to 30 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 1, Downward step to 28 °C
+AUTO END STAGE: Downward step to 28 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 2, Baseline at 28 °C
+AUTO RUN 2: P-only Kp=20 Ki=0; /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks/data/screening_run2_20261014_105202_883449.csv
+AUTO END STAGE: Baseline at 28 °C; elapsed=11.0; settled=False
+AUTO STAGE: run 2, Upward step to 30 °C
+AUTO END STAGE: Upward step to 30 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 2, Downward step to 28 °C
+AUTO END STAGE: Downward step to 28 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 3, Baseline at 28 °C
+AUTO RUN 3: P-only Kp=40 Ki=0; /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks/data/screening_run3_20261014_105335_877556.csv
+AUTO END STAGE: Baseline at 28 °C; elapsed=11.0; settled=False
+AUTO STAGE: run 3, Upward step to 30 °C
+AUTO END STAGE: Upward step to 30 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 3, Downward step to 28 °C
+AUTO END STAGE: Downward step to 28 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 4, Baseline at 28 °C
+AUTO RUN 4: PI Kp=16 Ki=0.1; /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks/data/screening_run4_20261014_105508_891380.csv
+AUTO END STAGE: Baseline at 28 °C; elapsed=11.0; settled=False
+AUTO STAGE: run 4, Upward step to 30 °C
+AUTO END STAGE: Upward step to 30 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 4, Downward step to 28 °C
+AUTO END STAGE: Downward step to 28 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 5, Baseline at 28 °C
+AUTO RUN 5: PI Kp=16 Ki=0.5; /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks/data/screening_run5_20261014_105641_882344.csv
+AUTO END STAGE: Baseline at 28 °C; elapsed=11.0; settled=False
+AUTO STAGE: run 5, Upward step to 30 °C
+AUTO END STAGE: Upward step to 30 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 5, Downward step to 28 °C
+AUTO END STAGE: Downward step to 28 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 6, Baseline at 28 °C
+AUTO RUN 6: PI Kp=16 Ki=2; /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks/data/screening_run6_20261014_105814_945122.csv
+AUTO END STAGE: Baseline at 28 °C; elapsed=10.9; settled=False
+AUTO STAGE: run 6, Upward step to 30 °C
+AUTO END STAGE: Upward step to 30 °C; elapsed=41.0; settled=False
+AUTO STAGE: run 6, Downward step to 28 °C
+AUTO END STAGE: Downward step to 28 °C; elapsed=41.0; settled=False
+AUTO COMPLETE: /Users/kylechen/Desktop/SCHOOL/School 2026-2027/PHYS 39a/PHYS39A_instrumentation/code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks/data/screening_selected_logs.json
