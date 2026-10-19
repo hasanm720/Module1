@@ -8,9 +8,9 @@ import time
 import argparse
 
 HERE=Path(__file__).resolve().parent
-sys.path.insert(0,str(HERE.parents[3]/'module5/P1_P-only_control'))
+sys.path.insert(0,str(HERE.parents[2]/'module5/P1_P-only_control'))
 from p_control_gui import PControlGUI, QtWidgets, QtCore, serial, STALE_SECONDS, WINDOW_SECONDS
-from pi_logic import PIController
+from PHYS39A_instrumentation.code.module6.Part1.P7_experimental_goldilocks.pi_logic import PIController
 
 FIELDS=['elapsed_s','arduino_s','temperature_C','setpoint_C','kp_pwm_per_C',
         'ki_pwm_per_C_s','dt_s','error_C','u_P','u_I','requested_pwm','applied_pwm',
@@ -33,6 +33,7 @@ class PIControlGUI(PControlGUI):
 
     def build_ui(self):
         super().build_ui()
+        self.kp.setMaximum(1000)
         self.mode.addItem('PI')
         panel=QtWidgets.QWidget(); grid=QtWidgets.QGridLayout(panel)
         self.ki=QtWidgets.QDoubleSpinBox(); self.ki.setDecimals(4)

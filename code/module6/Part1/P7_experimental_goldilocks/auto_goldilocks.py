@@ -6,18 +6,20 @@ from pathlib import Path
 import sys
 import time
 
-from pi_control_gui import PIControlGUI, QtCore, QtWidgets, HERE
+from PHYS39A_instrumentation.code.module6.Part1.P7_experimental_goldilocks.pi_control_gui import PIControlGUI, QtCore, QtWidgets, HERE
 
-GAINS=[('P-only',5,0),('P-only',20,0),('P-only',40,0),
+GAINS=[('P-only',5,0),('P-only',20,0),('P-only',1000,0),
        ('PI',16,.1),('PI',16,.5),('PI',16,2)]
 
 
 class AutoGUI(PIControlGUI):
-    def __init__(self,port=None):
+    def __init__(self,port=None,run=None,kp=None):
         self.auto_active=False
         self.transitioning=False
         self.stage='Waiting for telemetry'
-        self.run_index=0
+        self.run_index=0 if run is None else run-1
+        self.single_run=run
+        self.kp_override=kp
         self.samples=deque()
         self.selected_logs=[]
         self.saturation_started=None
@@ -47,6 +49,7 @@ class AutoGUI(PIControlGUI):
         try:
             self.stop_control('Between automatic runs')
             mode,kp,ki=GAINS[self.run_index]
+            if self.kp_override is not None: kp=self.kp_override
             self.run_number.setValue(self.run_index+1)
             self.mode.setCurrentText(mode)
             self.kp.setValue(kp); self.ki.setValue(ki)
@@ -122,9 +125,14 @@ class AutoGUI(PIControlGUI):
             self.stop_control('Automatic run complete')
             self.transitioning=False
             self.run_index+=1
-            if self.run_index<6: self.start_run()
+            if self.run_index<6 and self.single_run is None: self.start_run()
             else:
                 self.auto_active=False
+                if self.single_run is not None:
+                    self.progress.setText('Selected run complete — PWM zero. Close window when ready.')
+                    print(f'AUTO COMPLETE: {self.selected_logs[-1]}',flush=True)
+                    QtCore.QTimer.singleShot(1000,self.close)
+                    return
                 manifest=HERE/'data'/'screening_selected_logs.json'
                 manifest.write_text(json.dumps(self.selected_logs,indent=2)+'\n')
                 self.progress.setText('Six short screening runs complete — PWM zero. Responses may not have settled.')
@@ -133,7 +141,11 @@ class AutoGUI(PIControlGUI):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__); parser.add_argument('--port')
+    parser.add_argument('--run',type=int,choices=range(1,7),help='Repeat only this run')
+    parser.add_argument('--kp',type=float,help='Override Kp for a selected run (0–1000)')
     args=parser.parse_args()
+    if args.kp is not None and (args.run is None or not 0<=args.kp<=1000):
+        parser.error('--kp requires --run and a value from 0 to 1000')
     app=QtWidgets.QApplication(sys.argv)
-    gui=AutoGUI(args.port); gui.show()
+    gui=AutoGUI(args.port,args.run,args.kp); gui.show()
     sys.exit(app.exec())

@@ -33,6 +33,8 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('logs',type=Path,nargs=6,help='Selected logs in run 1–6 order')
     parser.add_argument('--output',type=Path,default=Path(__file__).resolve().parent/'results')
+    parser.add_argument('--allow-mixed-pi-kp',action='store_true',
+                        help='Plot PI reruns with different Kp; these do not isolate the effect of Ki')
     args=parser.parse_args()
     datasets=[load(p,i) for i,p in enumerate(args.logs,1)]
     if len({targets for _,targets in datasets})!=1: raise ValueError('All six runs must use the same two setpoints')
@@ -40,16 +42,22 @@ def main():
     kp=[float(rows[0]['kp_pwm_per_C']) for rows,_ in datasets]
     ki=[float(rows[0]['ki_pwm_per_C_s']) for rows,_ in datasets]
     if not kp[0]<kp[1]<kp[2]: raise ValueError('P gains must increase from low to high')
-    if not kp[3]==kp[4]==kp[5] or not 0<kp[3]<kp[1]: raise ValueError('PI Kp must be fixed below intermediate P Kp')
+    if args.allow_mixed_pi_kp:
+        if not all(np.isfinite(k) and k>0 for k in kp[3:]): raise ValueError('PI Kp must be positive and finite')
+        print('PI Kp comparison check waived: differences cannot be attributed to Ki alone.')
+    elif not kp[3]==kp[4]==kp[5] or not 0<kp[3]<kp[1]: raise ValueError('PI Kp must be fixed below intermediate P Kp')
     if not 0<ki[3]<ki[4]<ki[5]: raise ValueError('PI Ki must increase from low to high')
     args.output.mkdir(exist_ok=True,parents=True)
     for number,(rows,_) in enumerate(datasets,1):
         t=np.array([float(r['arduino_s']) for r in rows]); t-=t[0]
-        fig,axes=plt.subplots(3,1,figsize=(11,8),sharex=True)
-        for ax,keys in zip(axes,[['temperature_C','setpoint_C'],['reported_signed_pwm','applied_pwm','requested_pwm','u_P','u_I'],['error_C']]):
+        fig,axes=plt.subplots(4,1,figsize=(11,10),sharex=True)
+        for ax,keys in zip(axes,[['temperature_C','setpoint_C'],['reported_signed_pwm','applied_pwm'],['requested_pwm','u_P','u_I'],['error_C']]):
             for key in keys: ax.plot(t,[float(r[key]) for r in rows],label=key)
             ax.legend(); ax.grid(alpha=.3)
-        for ax,label in zip(axes,['Temperature (°C)','Signed PWM','Error (°C)']): ax.set_ylabel(label)
+        for ax,label in zip(axes,['Temperature (°C)','Signed PWM','Controller output\n(PWM units)','Error (°C)']): ax.set_ylabel(label)
+        axes[1].set_ylim(-270,270)
+        axes[1].set_yticks([-255,0,255])
+        for boundary in (-255,255): axes[1].axhline(boundary,color='gray',linestyle='--',alpha=.5)
         axes[-1].set_xlabel('Elapsed time (s)')
         interval=np.median([float(r['dt_s']) for r in rows])
         fig.suptitle(f'Experimental run {number}: Kp={kp[number-1]:g}, Ki={ki[number-1]:g}; '
