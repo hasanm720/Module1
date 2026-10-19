@@ -1,225 +1,224 @@
 # A3 — Feedback Data and Lumped Modeling
 
-Assignment code: A3
-Module: PHYS39 Module 6
-Team members: Kyle Chen and Muhammad Hasan
+PHYS 39 · Module 6 · Kyle Chen and Muhammad Hasan · October 19, 2026
 
 ## 1. One-lump model and P-control predictions
 
-The block stores heat while the TEC supplies power and the surroundings remove it:
+The First Law gives storage = TEC heat input − heat loss to the room. With C = mc_p, constant thermal properties, and signed applied command u:
 
 $$
-C\frac{dT}{dt}=P_u u-H(T-T_{amb})\quad\Rightarrow\quad\tau\frac{dT}{dt}=T_{amb}+\chi u-T
+C\frac{dT}{dt}=P_u u-H(T-T_{amb})
 $$
 
-$$
-\tau=C/H=91.69\ \mathrm{s},\qquad\chi=P_u/H;\quad\chi_h=0.5311,\ \chi_c=0.1878\ \mathrm{^{\circ}C/PWM}
-$$
-
-Use χ_h for positive PWM and χ_c for negative PWM. For P control, u = Kp(Tset − T). At steady state:
+C is in J/K, Pu in W/PWM, and H in W/K; each term has units W. At constant command, the steady balance gives Tss = Tamb + (Pu/H)u. Comparing with measured susceptibility identifies χ = Pu/H. Subtracting steady state gives C d(T − Tss)/dt = −H(T − Tss), so τ = C/H.
 
 $$
-0=\chi K_p(T_{set}-T_{ss})-(T_{ss}-T_{amb})
+\frac{dT}{dt}=\frac{T_{amb}+\chi u-T}{\tau},\qquad\tau=91.69\ \mathrm{s}
 $$
 
+Measured χh = 0.5311 and χc = 0.1878 °C/PWM. Heating and cooling coefficients differ because resistive heating aids heating and opposes cooling. The 63% heating crossing estimates τ to about one 0.57 s sampling interval; ambient drift and incomplete settling add unquantified uncertainty.
+
+Substitute P control u = Kp(Tset − T). At steady state, (1 + χKp)Tss = Tamb + χKpTset. Subtract the steady balance to obtain the transient:
+
 $$
-e_{ss}=\frac{T_{set}-T_{amb}}{1+\chi K_p},\qquad\tau_{cl}=\frac{\tau}{1+\chi K_p},\qquad L=\chi K_p
+e_{ss}=\frac{T_{set}-T_{amb}}{1+\chi K_p},\quad L=\chi K_p,\quad\tau_{cl}=\frac{\tau}{1+L}
 $$
 
-Subtracting the steady-state balance gives τ d(T − Tss)/dt = −(1 + L)(T − Tss). **L = χKp is the dimensionless loop gain.**
+L is dimensionless. Increasing Kp reduces both droop and response time by 1 + L. P requires nonzero error to replace heat lost to the room. At Kp = 10 and target 30 °C, the saved baseline predicts droop 0.916 °C and τcl = 14.53 s.
 
-**Higher Kp:** smaller droop and faster response. P still needs nonzero error to replace heat lost to the room.
+**Measured check:** for +5 PWM and Tamb = 24.220 °C, predicted Tss = 26.875 °C versus a measured final-minute mean of 26.366 °C. Warming and approximate scale agree; the 0.510 °C discrepancy exposes model/calibration limits. The same trace supplied τ, so timing agreement is not independent evidence.
 
-### Measured comparison: +5 PWM open loop
-
-Part 3 used ambient 24.220 °C and τ = 91.69 s. Prediction: Tss = 24.220 + 0.5311(5).
-
-| Predicted temperature | Measured final-minute mean | Prediction error |
-| --- | --- | --- |
-| 26.875 °C | 26.366 °C | +0.510 °C |
-
-The model captures warming but predicts too high a temperature. This trace also supplied τ, so its response time is not an independent check.
-
-### Module 5 interpretation
-
-• **Better insulation:** lower H, higher χ, less droop.
-• **Double C:** double response time; same steady temperature.
-• **Kp = 1:** L = 0.5311 is not much smaller than one. The crossover is Kp = 1.883 PWM/°C.
+**Module 5 interpretation:** insulation lowers H and droop; doubling C slows the transient without changing the steady balance. Kp = 1 gives L = 0.5311, not much smaller than one; L = 1 at Kp = 1.883 PWM/°C. Module 5 gain 20 approximately settled at 29.386 °C (droop 0.614 °C), while higher gains showed increasingly ambiguous or recurring waves. Different ambient conditions limit quantitative cross-day comparisons.
 
 ## 2. Experimental Goldilocks plots and metrics
 
-All runs used one apparatus, setpoints **28 → 30 → 28 °C**, PWM limit **±255**, anti-windup on, and sample interval ≈0.57 s. Each run lasted ≈93 s: ≈11 s baseline and ≈41 s per step. The integral was reset before each run. Initial temperatures are recorded below; they were not matched.
+Six recorded runs use the same apparatus, 28 → 30 → 28 °C setpoints, PWM limit ±255, anti-windup, and ≈0.57 s sampling. Each has about 10 s baseline and 40 s per step. The integral was reset before each run. Runs 3 and 6 are the October 19 Kp = 1000 reruns; the others are October 14 recordings.
 
-![Figure 1. Experimental P, Kp = 5 PWM/°C, Ki = 0. Up/down step starts: 25.09/27.40 °C. Slow response and large error.](../figures/module_06/a3/experiment_1.png)
+**Protocol limitation:** starting temperatures differ, and selected PI gains are 16/0.1, 16/0.5, and 1000/2 (Kp/Ki). Thus Run 6 does not isolate increasing Ki at fixed Kp. We preserve and disclose the actual recordings rather than presenting them as a matched Ki sweep.
 
-*Figure 1. Experimental P, Kp = 5 PWM/°C, Ki = 0. Up/down step starts: 25.09/27.40 °C. Slow response and large error.*
+![Figure 1. Experimental P: Kp = 5 PWM/°C; Ki = 0 PWM/(°C·s). Initial T = 24.38 °C; 0/164 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.](../figures/module_06/a3/experiment_1.png)
 
-![Figure 2. Experimental P, Kp = 20 PWM/°C, Ki = 0. Up/down step starts: 27.30/29.30 °C. Faster response with remaining droop.](../figures/module_06/a3/experiment_2.png)
+*Figure 1. Experimental P: Kp = 5 PWM/°C; Ki = 0 PWM/(°C·s). Initial T = 24.38 °C; 0/164 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.*
 
-*Figure 2. Experimental P, Kp = 20 PWM/°C, Ki = 0. Up/down step starts: 27.30/29.30 °C. Faster response with remaining droop.*
+![Figure 2. Experimental P: Kp = 20 PWM/°C; Ki = 0 PWM/(°C·s). Initial T = 26.42 °C; 0/165 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.](../figures/module_06/a3/experiment_2.png)
 
-### Experimental runs 3–4
+*Figure 2. Experimental P: Kp = 20 PWM/°C; Ki = 0 PWM/(°C·s). Initial T = 26.42 °C; 0/165 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.*
 
-![Figure 3. Experimental P, Kp = 40 PWM/°C, Ki = 0. Up/down step starts: 27.76/29.64 °C. Small peak below target; no clear ringing.](../figures/module_06/a3/experiment_3.png)
+![Figure 3. Experimental P: Kp = 1000 PWM/°C; Ki = 0 PWM/(°C·s). Initial T = 24.77 °C; 133/163 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.](../figures/module_06/a3/experiment_3.png)
 
-*Figure 3. Experimental P, Kp = 40 PWM/°C, Ki = 0. Up/down step starts: 27.76/29.64 °C. Small peak below target; no clear ringing.*
+*Figure 3. Experimental P: Kp = 1000 PWM/°C; Ki = 0 PWM/(°C·s). Initial T = 24.77 °C; 133/163 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.*
 
-![Figure 4. Experimental PI, Kp = 16 PWM/°C, Ki = 0.1 PWM/(°C·s). Up/down starts: 27.43/29.33 °C. Slow integral correction.](../figures/module_06/a3/experiment_4.png)
+![Figure 4. Experimental PI: Kp = 16 PWM/°C; Ki = 0.1 PWM/(°C·s). Initial T = 27.74 °C; 0/164 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.](../figures/module_06/a3/experiment_4.png)
 
-*Figure 4. Experimental PI, Kp = 16 PWM/°C, Ki = 0.1 PWM/(°C·s). Up/down starts: 27.43/29.33 °C. Slow integral correction.*
+*Figure 4. Experimental PI: Kp = 16 PWM/°C; Ki = 0.1 PWM/(°C·s). Initial T = 27.74 °C; 0/164 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.*
 
-### Experimental runs 5–6
+![Figure 5. Experimental PI: Kp = 16 PWM/°C; Ki = 0.5 PWM/(°C·s). Initial T = 27.62 °C; 0/163 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.](../figures/module_06/a3/experiment_5.png)
 
-![Figure 5. Experimental PI, Kp = 16 PWM/°C, Ki = 0.5 PWM/(°C·s). Up/down starts: 27.45/29.95 °C. Closest tracking with little overshoot.](../figures/module_06/a3/experiment_5.png)
+*Figure 5. Experimental PI: Kp = 16 PWM/°C; Ki = 0.5 PWM/(°C·s). Initial T = 27.62 °C; 0/163 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.*
 
-*Figure 5. Experimental PI, Kp = 16 PWM/°C, Ki = 0.5 PWM/(°C·s). Up/down starts: 27.45/29.95 °C. Closest tracking with little overshoot.*
+![Figure 6. Experimental PI: Kp = 1000 PWM/°C; Ki = 2 PWM/(°C·s). Initial T = 20.37 °C; 132/164 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.](../figures/module_06/a3/experiment_6.png)
 
-![Figure 6. Experimental PI, Kp = 16 PWM/°C, Ki = 2 PWM/(°C·s). Up/down starts: 27.58/29.92 °C. 0.76 °C overshoot and 0.86 °C undershoot.](../figures/module_06/a3/experiment_6.png)
+*Figure 6. Experimental PI: Kp = 1000 PWM/°C; Ki = 2 PWM/(°C·s). Initial T = 20.37 °C; 132/164 applied commands at ±255. Only actual applied PWM is shown; controller requests are not PWM output.*
 
-*Figure 6. Experimental PI, Kp = 16 PWM/°C, Ki = 2 PWM/(°C·s). Up/down starts: 27.58/29.92 °C. 0.76 °C overshoot and 0.86 °C undershoot.*
+### Largest-gain P and PI: both step directions
 
-### Largest-gain P and PI: step-response metrics
+Rise time is the first 10%–90% crossing from the last pre-step measured temperature toward the new target, interpolated between samples. Overshoot is excursion beyond the target divided by the commanded 2 °C step. Settling requires remaining within ±0.04 °C through the end of the step, with at least 10 s observed in-band.
 
-**Rise:** first 10%–90% crossing from measured initial temperature toward the new target; linearly interpolated.
+| Mode Kp/Ki | Step | Rise (s) | Overshoot (%) | Period (s) | End error (°C) |
+| --- | --- | --- | --- | --- | --- |
+| P 1000/0 | Up | 1.79 | 71.5 | 5.67 | -0.240 |
+| P 1000/0 | Down | 2.82 | 35.0 | 6.23 | -0.247 |
+| PI 1000/2 | Up | 0.54 | 66.0 | 5.66 | -0.317 |
+| PI 1000/2 | Down | 2.03 | 36.5 | 5.67 | -0.221 |
 
-**Overshoot:** excursion beyond the target ÷ 2 °C step × 100%. **Settling:** remain within ±0.04 °C for the rest of the step, with at least 10 s recorded in-band.
+For all four high-gain steps, settling time and steady-state error are **not established**. End error is target minus the final 5 s mean, not steady-state error. The 0.54 s PI upward rise spans approximately one sample interval and is poorly resolved. Period is the median peak-to-peak spacing, requiring at least three peaks confirmed by reversals ≥0.20 °C; sampling limits timing resolution to roughly 0.57 s.
 
-| Mode Kp/Ki | Step | Rise (s) | Overshoot (%) | End error (°C) |
-| --- | --- | --- | --- | --- |
-| P 40/0 | Up | 6.40 | 0.0 | +0.373 |
-| P 40/0 | Down | 6.05 | 16.5 | +0.268 |
-| PI 16/2 | Up | 7.01 | 38.0 | +0.058 |
-| PI 16/2 | Down | 9.03 | 43.0 | +0.088 |
+Both high-gain recordings have recurring, bounded oscillations over the observed window. This is consistent with a nonlinear limit cycle, but does not prove ideal marginal stability or long-term boundedness. P run 3 reaches 31.43 °C / 27.30 °C on the up/down steps; PI run 6 reaches 31.32 °C / 27.27 °C. Applied PWM saturates on 133/163 and 132/164 samples, respectively.
 
-**Not established in any of the four windows:** settling time, steady-state error, and oscillation period. End error averages the final 5 s; it is not steady-state error.
+## 3. Two-lump simulation and experiment comparison
 
-**Saturation:** none experimentally; maximum absolute reported PWM was 90. High PI showed one overshoot/undershoot per step.
+One shared physical parameter set for all six simulations: χc = 0.1878 and χh = 0.5311 °C/PWM; τ = 91.69 s; Tamb = 24.220 °C; C = 100.549 J/K; H = 1.0966 W/K; Pu,c = 0.20595 W/PWM; r = 2.8280; G = 2 W/K; CT/C = 0.35; TEC voltage 12 V (assumed ON-state value), resistance 1.50 Ω; both masses initially 28 °C; targets 28 → 30 → 28 °C at 11 and 52 s; PWM ±255; q(0) = 0; anti-windup on; Δt = 0.01 s.
 
-## 3. Two-lump simulations and comparison
-
-**One shared plant:** χc = 0.1878 and χh = 0.5311 °C/PWM; τ = 91.69 s; ambient 24.220 °C; C = 100.549 J/°C; H = 1.0966 W/°C; Pu,c = 0.20595 W/PWM; G = 10 W/°C; CT/C = 0.35; assumed voltage 12 V; resistance 1.50 Ω.
-
-**One shared protocol:** both lumps initially 28 °C; targets 28 → 30 → 28 °C at 11 and 52 s; PWM ±255; q(0) = 0; anti-windup on; Δt = 0.025 s. Only mode and gains change.
-
-**Model choice:** G was adjusted once from 2 to 10 W/°C to reproduce the small high-P peak. G and CT/C are estimates; ambient and τ are reused from Part 3.
-
-**Comparison limit:** the common 28 °C simulation start differs from the experimental starts, especially at low gain.
+G and CT/C are unresolved internal estimates, retained at the assignment starting values. The high-P model reproduces overshoot and decay qualitatively, but cannot reproduce the measured persistent wave train. Exact fitting is not claimed. All simulations keep the same initial state as required; their 28 °C start differs from the recorded starts, and the common switching times differ slightly from individual host-timed experiments.
 
 $$
-S=C_T(G+H)+C_mG,\quad\zeta_{2L,P}=\frac{S}{2\sqrt{C_TC_mG(H+P_uK_p)}}
+C_T\dot T=P_u u-G(T-T_m),\qquad C_m\dot T_m=G(T-T_m)-H(T_m-T_{amb})
+$$
+
+The controller measures Tm. With perturbations θT and θm about equilibrium and unsaturated P feedback, GθT = Cm dθm/dt + (G + H)θm. Differentiate this expression and substitute the TEC balance to eliminate θT:
+
+$$
+C_TC_m\ddot\theta_m+S\dot\theta_m+G(H+P_uK_p)\theta_m=0,\quad S=C_T(G+H)+C_mG
 $$
 
 $$
-K_{p,crit}=\frac{S^2/(4C_TC_mG)-H}{P_u},\quad K_{i,crit}=\frac{S(H+P_uK_p)}{C_TC_mP_u},\quad\rho_I=K_i/K_{i,crit}
+\zeta_{2L,P}=\frac{S}{2\sqrt{C_TC_mG(H+P_uK_p)}},\quad K_{p,crit}=\frac{S^2/(4C_TC_mG)-H}{P_u}
 $$
 
-At the heating equilibrium, **Kp,crit = 18.46 PWM/°C**; for PI at Kp = 16, **Ki,crit = 8.118 PWM/(°C·s)**. These are local unsaturated criteria. Negative PWM uses the cooling coefficient during downward transients.
+For this shared plant, heating-direction Kp,crit = **3.478 PWM/°C**. The three gains 5, 20, and 1000 are all above it, with progressively smaller damping. This shared model therefore does not reproduce a monotonic low-gain-to-critical-to-underdamped progression for these selected experimental gains.
 
-### Two-lump P simulations
+$$
+C_TC_m s^3+S s^2+G(H+P_uK_p)s+GP_uK_i=0
+$$
 
-![Figure 7. Simulated P, Kp = 5, Ki = 0; ζ₂L,P = 1.719. Stable non-oscillatory.](../figures/module_06/a3/simulation_1.png)
+For positive coefficients, Routh–Hurwitz requires S·G(H + PuKp) > CT·Cm·G·Pu·Ki. This yields:
 
-*Figure 7. Simulated P, Kp = 5, Ki = 0; ζ₂L,P = 1.719. Stable non-oscillatory.*
+$$
+K_{i,crit}=\frac{S(H+P_uK_p)}{C_TC_mP_u},\qquad\rho_I=K_i/K_{i,crit}
+$$
 
-![Figure 8. Simulated P, Kp = 20, Ki = 0; ζ₂L,P = 0.964. Stable underdamped.](../figures/module_06/a3/simulation_2.png)
+The unsaturated local PI model is stable for 0 < ρI < 1, marginal at ρI = 1, and unstable for ρI > 1. These heating-equilibrium classifications do not describe actuator clipping or the complete heating/cooling switching transient.
 
-*Figure 8. Simulated P, Kp = 20, Ki = 0; ζ₂L,P = 0.964. Stable underdamped.*
+### Six simulations using the same plant and protocol
 
-### Two-lump simulations 3–4
+![Figure 7. Two-lump P: Kp = 5, Ki = 0; ζ₂L,P = 0.883. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.](../figures/module_06/a3/simulation_1.png)
 
-![Figure 9. Simulated P, Kp = 40, Ki = 0; ζ₂L,P = 0.697. Stable underdamped.](../figures/module_06/a3/simulation_3.png)
+*Figure 7. Two-lump P: Kp = 5, Ki = 0; ζ₂L,P = 0.883. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.*
 
-*Figure 9. Simulated P, Kp = 40, Ki = 0; ζ₂L,P = 0.697. Stable underdamped.*
+![Figure 8. Two-lump P: Kp = 20, Ki = 0; ζ₂L,P = 0.495. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.](../figures/module_06/a3/simulation_2.png)
 
-![Figure 10. Simulated PI, Kp = 16, Ki = 0.1; Ki,crit = 8.118; ρI = 0.012. Stable non-oscillatory.](../figures/module_06/a3/simulation_4.png)
+*Figure 8. Two-lump P: Kp = 20, Ki = 0; ζ₂L,P = 0.495. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.*
 
-*Figure 10. Simulated PI, Kp = 16, Ki = 0.1; Ki,crit = 8.118; ρI = 0.012. Stable non-oscillatory.*
+![Figure 9. Two-lump P: Kp = 1000, Ki = 0; ζ₂L,P = 0.073. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.](../figures/module_06/a3/simulation_3.png)
 
-### Two-lump simulations 5–6
+*Figure 9. Two-lump P: Kp = 1000, Ki = 0; ζ₂L,P = 0.073. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.*
 
-![Figure 11. Simulated PI, Kp = 16, Ki = 0.5; Ki,crit = 8.118; ρI = 0.062. Stable non-oscillatory.](../figures/module_06/a3/simulation_5.png)
+![Figure 10. Two-lump PI: Kp = 16, Ki = 0.1; Ki,crit = 1.864; ρI = 0.054. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.](../figures/module_06/a3/simulation_4.png)
 
-*Figure 11. Simulated PI, Kp = 16, Ki = 0.5; Ki,crit = 8.118; ρI = 0.062. Stable non-oscillatory.*
+*Figure 10. Two-lump PI: Kp = 16, Ki = 0.1; Ki,crit = 1.864; ρI = 0.054. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.*
 
-![Figure 12. Simulated PI, Kp = 16, Ki = 2; Ki,crit = 8.118; ρI = 0.246. Stable underdamped.](../figures/module_06/a3/simulation_6.png)
+![Figure 11. Two-lump PI: Kp = 16, Ki = 0.5; Ki,crit = 1.864; ρI = 0.268. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.](../figures/module_06/a3/simulation_5.png)
 
-*Figure 12. Simulated PI, Kp = 16, Ki = 2; Ki,crit = 8.118; ρI = 0.246. Stable underdamped.*
+*Figure 11. Two-lump PI: Kp = 16, Ki = 0.5; Ki,crit = 1.864; ρI = 0.268. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.*
+
+![Figure 12. Two-lump PI: Kp = 1000, Ki = 2; Ki,crit = 104.407; ρI = 0.019. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.](../figures/module_06/a3/simulation_6.png)
+
+*Figure 12. Two-lump PI: Kp = 1000, Ki = 2; Ki,crit = 104.407; ρI = 0.019. Local classification: stable underdamped. Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.*
 
 ### Guided comparison answers
 
-**Best matches:** high P (run 3) reproduces the small decaying peak below target; intermediate PI (run 5) reproduces the smooth approach close to target. Neither match establishes settling.
+| Run | Kp/Ki | Stability measure | Local model class |
+| --- | --- | --- | --- |
+| 1 | 5/0 | 0.883 | stable underdamped |
+| 2 | 20/0 | 0.495 | stable underdamped |
+| 3 | 1000/0 | 0.073 | stable underdamped |
+| 4 | 16/0.1 | ρI = 0.054 | stable underdamped |
+| 5 | 16/0.5 | ρI = 0.268 | stable underdamped |
+| 6 | 1000/2 | ρI = 0.019 | stable underdamped |
 
-**P:** Kp = 5, 20, 40 lie below, near, and above Kp,crit. Their ζ values are 1.719, 0.964, and 0.697. Higher gain speeds response and lowers damping. All are stable; positive-parameter two-lump P cannot become marginally stable or unstable.
+**1. Best correspondence:** low/intermediate P simulations reproduce slow approach and remaining droop qualitatively; intermediate PI (Run 5) reproduces reduced target error. None reproduces the complete high-gain speed, persistent oscillation, and settling behavior. Initial conditions prevent a fair numerical ranking by rise time alone.
 
-**PI:** ρI = 0.012, 0.062, 0.246: all stable. Runs 4–5 have real poles; run 6 is underdamped. Real-pole PI can still overshoot because q starts away from equilibrium.
+**2. P organization:** ζ decreases from 0.883 to 0.495 to 0.073; all gains exceed Kp,crit. Linear P poles remain negative, so ringing decays. The simulation can clip at high gain, requiring the nonlinear time trace as well as the pole calculation.
 
-Increasing Ki strengthens correction but increases ringing. Marginal stability is at ρI = 1; instability is above 1. Our retained gains stay below this boundary.
+**3. PI organization:** Runs 4–5 share Kp = 16 and increase ρI from 0.054 to 0.268, making integral correction more aggressive. Run 6 changes Kp to 1000, raising Ki,crit to 104.407 and reducing ρI to 0.019 despite its higher Ki. The retained sequence is not an increasing-ρI study. All three local linear models are stable underdamped; none is marginal or unstable.
 
-**Agreement:** stronger PI correction reduces early error, then produces overshoot.
+| High-gain case | Measured rise (s) | Model rise (s) | Measured OS (%) | Model OS (%) |
+| --- | --- | --- | --- | --- |
+| P Up | 1.79 | 4.04 | 71.5 | 87.8 |
+| P Down | 2.82 | 6.22 | 35.0 | 21.0 |
+| PI Up | 0.54 | 4.04 | 66.0 | 87.8 |
+| PI Down | 2.03 | 6.22 | 36.5 | 21.0 |
 
-| Comparison (up/down) | Experiment | Simulation |
-| --- | --- | --- |
-| High-P rise time | 6.40 / 6.05 s | 9.05 / 11.53 s |
-| High-PI overshoot | 38 / 43% | 46.8 / 57.7% |
+**4. Agreement and disagreement:** both model and experiment show overshoot and PWM clipping at high gain. The measured high-gain period is about 5.7–6.2 s, whereas the shared model has slower, decaying oscillations. Persistent measured ringing contradicts the ideal unsaturated, continuous-time prediction of decay if that model is used to explain the full experiment. It does not prove the apparatus is linearly marginal: saturation, sampled control, additional thermal states, and changing parameters are omitted effects.
 
-**Disagreement:** exact speed and overshoot do not match. Different starting states and estimated internal parameters limit agreement. No recorded growing or sustained oscillation contradicts the predicted stability in these windows.
+The high-gain simulations are model tests rather than fitted predictions. Halving Δt to 0.005 s changes temperature by at most 0.0201 °C across the six runs, much smaller than their main experimental discrepancies.
 
-### Controlled checks
-
-• **One-lump PI:** higher Ki lowers ζ; higher Kp raises ζ; doubling C divides ζ by √2.
-• **Two-lump practice:** Kp = 60, 105, 160 gives ζ ≈1.31, 1.00, 0.81. Raising G from 35 to 70 increases damping; a more equal mass split lowers damping.
-
-**Simulated saturation:** the Ki = 3 practice run comes within 0.01 PWM of ±255 at 191.8 s. Early growth shows linear instability; later output limiting and anti-windup bound the response. This was not experimental saturation.
-
-## Data, code, and modeling checkpoint
-
-Experimental sources: six October 14 CSVs in the Part 7 data directory. Figures plot reported signed PWM alongside requested PWM; telemetry reports the previous interval’s output. Simulation data, metrics, and calculations are reproducible with build_a3.py. Halving simulation Δt changes temperature by less than 0.0022 °C in the six retained runs.
-
-Local files: [analysis/build script](../../code/module6/A3/build_a3.py); [experimental metrics](../../code/module6/A3/results/experimental_metrics.csv); [settings and stability calculations](../../code/module6/A3/results/analysis.json).
-
-**Raw recordings:** [Run 1 raw CSV](../../code/module6/Part1/P7_experimental_goldilocks/data/screening_run1_20261014_105029_872226.csv) · [Run 2 raw CSV](../../code/module6/Part1/P7_experimental_goldilocks/data/screening_run2_20261014_105202_883449.csv) · [Run 3 raw CSV](../../code/module6/Part1/P7_experimental_goldilocks/data/screening_run3_20261014_105335_877556.csv) · [Run 4 raw CSV](../../code/module6/Part1/P7_experimental_goldilocks/data/screening_run4_20261014_105508_891380.csv) · [Run 5 raw CSV](../../code/module6/Part1/P7_experimental_goldilocks/data/screening_run5_20261014_105641_882344.csv) · [Run 6 raw CSV](../../code/module6/Part1/P7_experimental_goldilocks/data/screening_run6_20261014_105814_945122.csv)
-
-GitHub modeling checkpoint: [73d29c9](https://github.com/hasanm720/Module1/commit/73d29c92752bb946929633de97bcb714192e3ba2) (existing Part 3/4 checkpoint). This checkpoint predates the six runs and A3; the new A3 files have not been committed or pushed.
-
-Assignment: [Lab 6 — A3](https://sethfraden.github.io/Phys39F26-course/labs/lab-06/#a3-feedback-data-and-lumped-model-memo). Two-lump protocol: [Lab 7 — six simulation runs](https://sethfraden.github.io/Phys39F26-course/labs/lab-07/#make-the-six-two-lump-goldilocks-plots).
+**Controlled parameter checks:** one-lump PI comparisons show higher Ki and C lower damping, while higher Kp raises it. The assigned two-lump P cases give ζ ≈1.31, 1.00, 0.81 at Kp = 60, 105, 160. At Kp = 105, G = 35, 50, 70 W/K gives ζ ≈0.84, 1.00, 1.18. An approximately equal capacitance split gives the weakest damping among the tested splits. These practice figures remain in Part_II/RESULTS.md, separate from the twelve Goldilocks figures.
 
 ## 4. PI steady state, assumptions, and windup
 
 $$
-\dot q=e=0\ \Rightarrow\ T_{ss}=T_{set}=55\ ^\circ\mathrm{C},\quad u_P=0,\quad u_I=H(55-T_{amb})/P_u
+u=K_pe+K_iq,\quad\dot q=e,\quad e=T_{set}-T
 $$
 
-**Ideal result: 55 °C.** At equilibrium q is constant, so e = 0. The integral retains the heat-loss-balancing output while P becomes zero.
+At a stable, unsaturated PI equilibrium, q is constant, so dq/dt = e = 0. Therefore **Tss = Tset = 55 °C**. The P term becomes zero, while the stored I term supplies the heat-loss-balancing command:
 
-Required heating command: (55 − 24.220)/0.5311 = **57.95 PWM**, within ±255 in this model. This is a prediction, not a 55 °C experiment.
+$$
+u_{ss}=u_I=\frac{H(55-T_{amb})}{P_{u,h}}=\frac{55-24.220}{0.5311}=57.95\ \mathrm{PWM}
+$$
 
-**Conditions:** stable feedback, sufficient heating power, no persistent saturation or shutdown, Ki > 0 with continued integration, and accurate/timely measurement. Sensor bias shifts the actual temperature away from the indicated 55 °C.
+This is an ideal calculation, not a 55 °C hardware run. It requires stable feedback, enough heating power within ±255, no active shutdown, continued integral action with Ki > 0, and accurate, timely measurement. Sensor bias would make indicated rather than actual temperature equal 55 °C.
 
-**Windup:** stored error keeps growing while PWM is capped, causing overshoot and slow recovery.
+**Windup:** while applied PWM is capped, persistent error can keep increasing q. The excessive stored command then continues heating after the target is crossed, causing overshoot and delayed recovery. Conditional anti-windup holds q when the proposed integral update pushes the request farther past the limit, and permits updates that bring it back. The clamp and shutdown remain separate protections.
 
-**Anti-windup:** reject updates that push farther beyond the limit; accept updates that bring the request back.
+**Reset thought experiment:** at equilibrium P = 0 and I provides the balancing heat. Clearing q removes that command; temperature initially falls, then P responds and I rebuilds. Integral reset does not preserve the former equilibrium output.
 
-**Reset:** clearing q removes the balancing heat command. Temperature initially falls while I rebuilds.
-
-## 5. Model limits and gain selection
-
-**Complete this question only after completing Part II of Module 6.**
+## 5. Model limits and final gain choice
 
 $$
 T(t)-T_{ss}=[T(0)-T_{ss}]\exp[-(1+\chi K_p)t/\tau]
 $$
 
-**One-lump limit:** the positive, decaying exponential cannot cross its own steady temperature. From below the steady temperature and target, P cannot overshoot the target or ring.
+In the ideal continuous-time one-lump P model, the exponential is positive and decays: temperature approaches its equilibrium monotonically and cannot ring. This statement assumes instantaneous feedback; it is not a claim that every physical P controller is non-oscillatory. The observed Kp = 1000 P oscillation is direct evidence that this simplest model is inadequate.
 
-$$
-C_T\dot T_T=P_u u-G(T_T-T_m),\qquad C_m\dot T_m=G(T_T-T_m)-H(T_m-T_{amb})
-$$
+The two-lump balances add a second stored-energy state. Heat first changes the TEC-side temperature, then passes through G to the measured mass. Tm can continue rising after the command falls because the TEC-side mass remains hotter. This lag permits P overshoot and ringing; the twelve figures show what the model captures and where it fails.
 
-**Two-lump lag:** the TEC heats its own mass first; G then transfers heat to the measured mass. Stored TEC energy keeps changing Tm after the command falls, allowing overshoot and decaying oscillations.
+**Selected P:** Kp = 20 PWM/°C is a provisional measured compromise: it reduces the large error of Kp = 5 and avoids the large oscillations and saturation of Kp = 1000. The selected shared model gives ζ = 0.495 and Kp,crit = 3.478, predicting an underdamped response rather than critical damping. Selection is based on the measured tradeoff, not a claim that this gain is theoretically optimal.
 
-**Selected P gain:** Kp = 20 PWM/°C is close to Kp,crit = 18.46, with ζ = 0.964: fast response near critical damping. It retains droop; gain 40 reduces droop further but has a more pronounced transient peak.
+**Selected PI:** Kp = 16 PWM/°C and Ki = 0.5 PWM/(°C·s), with ρI = 0.268, combines relatively small final target error with limited overshoot in Run 5. Ki = 0.1 corrects more slowly; Kp = 1000, Ki = 2 produces persistent large excursions and clipping. Since the high-PI rerun changes both gains, it cannot establish the isolated effect of Ki. Neither selected gain pair has a verified long-term settling result.
 
-**Selected PI gains:** Kp = 16 PWM/°C and Ki = 0.5 PWM/(°C·s), with ρI = 0.062, well below 1. Run 5 approached both targets with little overshoot. Ki = 0.1 corrected too slowly; Ki = 2 produced larger excursions. These are provisional choices because the recordings did not establish full settling.
+**Next physical effect:** include the actual ≈0.57 s sampled controller and measurement/command delay. The present continuous-feedback simulation updates much faster. Further thermal states, sensor placement, and temperature-dependent TEC coefficients may also matter; these data do not identify a unique cause of the persistent oscillation.
 
-**Next model improvement:** include the ≈0.57 s measurement/command delay. Temperature-dependent TEC coefficients and thermal contact changes may also matter.
+## Data, code, and reproduction
+
+Build command from the repository root (phys39a environment):
+/opt/anaconda3/envs/phys39a/bin/python code/module6/A3/build_a3.py --save-csv
+
+[Analysis and report builder](../../code/module6/A3/build_a3.py) · [Experimental metrics](../../code/module6/A3/results/experimental_metrics.csv) · [Shared settings and stability calculations](../../code/module6/A3/results/analysis.json) · [Controlled comparison results](../../code/module6/Part_II/RESULTS.md)
+
+[Experimental Run 1 raw recording](../../code/module6/Part_I/P7_experimental_goldilocks/data/screening_run1_20261014_105029_872226.csv) · [Simulation Run 1 data](../../code/module6/A3/results/simulation_1.csv)
+
+[Experimental Run 2 raw recording](../../code/module6/Part_I/P7_experimental_goldilocks/data/screening_run2_20261014_105202_883449.csv) · [Simulation Run 2 data](../../code/module6/A3/results/simulation_2.csv)
+
+[Experimental Run 3 raw recording](../../code/module6/Part_I/P7_experimental_goldilocks/data/screening_run3_20261019_093931_013605.csv) · [Simulation Run 3 data](../../code/module6/A3/results/simulation_3.csv)
+
+[Experimental Run 4 raw recording](../../code/module6/Part_I/P7_experimental_goldilocks/data/screening_run4_20261014_105508_891380.csv) · [Simulation Run 4 data](../../code/module6/A3/results/simulation_4.csv)
+
+[Experimental Run 5 raw recording](../../code/module6/Part_I/P7_experimental_goldilocks/data/screening_run5_20261014_105641_882344.csv) · [Simulation Run 5 data](../../code/module6/A3/results/simulation_5.csv)
+
+[Experimental Run 6 raw recording](../../code/module6/Part_I/P7_experimental_goldilocks/data/screening_run6_20261019_094847_056154.csv) · [Simulation Run 6 data](../../code/module6/A3/results/simulation_6.csv)
+
+GitHub modeling/data checkpoint: [ff2f524 — Part 7 data with saturation reruns](https://github.com/hasanm720/Module1/commit/ff2f524b009e5d64936f1dcef9125ed07551ceb1). This report is a later local build; the checkpoint is not claimed to include the finished PDF.
+
+Assignment: [A3 Questions 1–5](https://sethfraden.github.io/Phys39F26-course/labs/lab-06/#a3-questions). Simulation protocol: [Module 6 Part II](https://sethfraden.github.io/Phys39F26-course/labs/lab-07/).
 

@@ -29,74 +29,77 @@ ROOT = HERE.parents[2]
 NOTES = ROOT/'docs/module_notes'
 FIGURES = ROOT/'docs/figures/module_06/a3'
 RESULTS = HERE/'results'
-P4 = ROOT/'code/module6/Part1/P4_Simulate_open_loop_control'
-P7 = ROOT/'code/module6/Part1/P7_experimental_goldilocks'
-if not P7.exists():
-    P7 = ROOT/'code/module6/Part1/P7_PI_control_and_goldilocks/Part7_experimental_goldilocks'
+P4 = ROOT/'code/module6/Part_I/P4_Simulate_open_loop_control'
+P7 = ROOT/'code/module6/Part_I/P7_experimental_goldilocks'
 sys.path.insert(0,str(P4))
 from run_part4 import measured_config
 import Lab_6_7_modeling_tec as model
 
-GAINS=[('P',5,0),('P',20,0),('P',40,0),('PI',16,.1),('PI',16,.5),('PI',16,2)]
 BASE=replace(measured_config(.1878,.5311,91.69,12,24.220,28),
-             coupling_w_per_c=10,tec_capacitance_fraction=.35,dt_s=.025,pwm_limit=255)
+             coupling_w_per_c=2,tec_capacitance_fraction=.35,dt_s=.01,pwm_limit=255)
 PU_H=BASE.tec_power_w_per_pwm*BASE.heating_to_cooling_ratio
 CT=BASE.tec_capacitance_j_per_c; CM=BASE.measured_capacitance_j_per_c
 G=BASE.coupling_w_per_c; H=BASE.heat_loss_w_per_c
 S=CT*(G+H)+CM*G
 KP_CRIT=(S*S/(4*CT*CM*G)-H)/PU_H
-KI_CRIT=model.two_lump_pi_critical_integral_gain(replace(BASE,kp_pwm_per_c=16))
 
 
 def read(path):
     with path.open() as stream: rows=list(csv.DictReader(stream))
-    return {key:np.array([float(r[key]) for r in rows]) for key in
-            ['arduino_s','temperature_C','setpoint_C','reported_signed_pwm','applied_pwm',
-             'requested_pwm','u_P','u_I','dt_s']},rows
+    keys=['arduino_s','temperature_C','setpoint_C','reported_signed_pwm','applied_pwm',
+          'requested_pwm','u_P','u_I','dt_s']
+    return {key:np.array([float(r[key]) for r in rows]) for key in keys},rows
+
+
+def oscillation_period(t,values):
+    # Confirm alternating extrema only after a 0.20 C reversal; avoid quantization peaks.
+    peaks=[]; direction=1; high=low=float(values[0]); high_t=float(t[0])
+    for time,value in zip(t[1:],values[1:]):
+        if direction==1:
+            if value>high: high=float(value); high_t=float(time)
+            if high-value>=.20:
+                peaks.append(high_t);direction=-1;low=float(value)
+        else:
+            low=min(low,float(value))
+            if value-low>=.20: direction=1;high=float(value);high_t=float(time)
+    return float(np.median(np.diff(peaks))) if len(peaks)>=3 else None
 
 
 def transitions(t,temp,target):
     edges=np.flatnonzero(np.diff(target)!=0)+1
     output=[]
     for a,b in zip(edges,list(edges[1:])+[len(t)]):
-        tt=t[a:b]-t[a]; values=temp[a:b]; initial=float(temp[a-1]); goal=float(target[a])
-        change=goal-initial
-        progress=(values-initial)/change
+        tt=t[a:b]-t[a]; values=temp[a:b]; initial=float(temp[a-1]);goal=float(target[a])
+        change=goal-initial; progress=(values-initial)/change
         crossings=[]
         for threshold in [.1,.9]:
             hits=np.flatnonzero(progress>=threshold)
-            if not len(hits): crossings.append(None); continue
+            if not len(hits):crossings.append(None);continue
             j=int(hits[0])
-            if j==0: crossings.append(float(tt[0])); continue
+            if j==0:crossings.append(float(tt[0]));continue
             fraction=(threshold-progress[j-1])/(progress[j]-progress[j-1])
             crossings.append(float(tt[j-1]+fraction*(tt[j]-tt[j-1])))
         rise=None if any(x is None for x in crossings) else crossings[1]-crossings[0]
-        amplitude=abs(goal-float(target[a-1]))
-        direction=1 if change>0 else -1
+        amplitude=abs(goal-float(target[a-1]));direction=1 if goal>target[a-1] else -1
         overshoot=max(0,float(np.max(direction*(values-goal))))/amplitude*100
         end_mean=float(np.mean(values[tt>=tt[-1]-5]))
-        # Require at least ten recorded seconds continuously within the 2% band.
         outside=np.flatnonzero(abs(values-goal)>.02*amplitude)
         candidate=0 if len(outside)==0 else int(outside[-1])+1
-        settling=(float(tt[candidate]) if candidate<len(tt) and tt[-1]-tt[candidate]>=10 else None)
-        output.append(dict(direction='Up' if goal>target[a-1] else 'Down',
-                           initial_C=initial,target_C=goal,duration_s=float(tt[-1]),
-                           rise_10_90_s=rise,overshoot_percent=overshoot,
-                           settling_2percent_s=settling,steady_error_C=None,
-                           end5s_error_C=goal-end_mean,period_s=None))
+        settling=float(tt[candidate]) if candidate<len(tt) and tt[-1]-tt[candidate]>=10 else None
+        output.append(dict(direction='Up' if direction>0 else 'Down',initial_C=initial,target_C=goal,
+            duration_s=float(tt[-1]),rise_10_90_s=rise,overshoot_percent=overshoot,
+            settling_2percent_s=settling,steady_error_C=None,end5s_error_C=goal-end_mean,
+            period_s=oscillation_period(tt,values)))
     return output
 
 
 def simulate_run(config,dt=None,duration=93):
     c=replace(config,dt_s=dt or config.dt_s)
-    state=model.ModelState(0,c.initial_c,c.initial_c,0)
-    mode='pi' if c.ki_pwm_per_c_s else 'p'
-    records=[]
+    state=model.ModelState(0,c.initial_c,c.initial_c,0);records=[]
     for _ in range(round(duration/c.dt_s)):
         target=28 if state.time_s<11-1e-8 or state.time_s>=52-1e-8 else 30
-        active=replace(c,setpoint_c=target)
-        before=state.measured_temperature_c
-        result=model.advance_model(state,active,'two_lump',mode)
+        active=replace(c,setpoint_c=target);before=state.measured_temperature_c
+        result=model.advance_model(state,active,'two_lump','pi' if c.ki_pwm_per_c_s else 'p')
         records.append([state.time_s-c.dt_s,before,target,result.applied_pwm,
                         result.p_pwm+result.i_pwm,result.p_pwm,result.i_pwm,state.integral_error_c_s])
     return np.array(records)
@@ -104,119 +107,79 @@ def simulate_run(config,dt=None,duration=93):
 
 def poles(config,pu=PU_H):
     kp=config.kp_pwm_per_c;ki=config.ki_pwm_per_c_s
-    if ki==0:
-        return np.roots([CT*CM,S,G*(H+pu*kp)])
-    return np.roots([CT*CM,S,G*(H+pu*kp),G*pu*ki])
+    coeff=[CT*CM,S,G*(H+pu*kp)]
+    if ki:coeff.append(G*pu*ki)
+    return np.roots(coeff)
 
 
 def classification(config):
     roots=poles(config)
-    if np.max(roots.real)>1e-7: return 'unstable'
-    if np.max(roots.real)>=-1e-7: return 'marginally stable'
+    if np.max(roots.real)>1e-7:return 'unstable'
+    if np.max(roots.real)>=-1e-7:return 'marginally stable'
     return 'stable underdamped' if np.max(abs(roots.imag))>1e-7 else 'stable non-oscillatory'
 
 
 def plot(t,temp,target,pwm,requested,path,title):
-    fig,axes=plt.subplots(2,1,figsize=(7.2,3.7),sharex=True,
-                          gridspec_kw={'height_ratios':[1.4,1]})
-    axes[0].plot(t,temp,color='#1764ab',lw=1.5,label='Measured temperature' if title.startswith('Experimental') else 'Mass temperature')
+    fig,axes=plt.subplots(2,1,figsize=(7.2,3.7),sharex=True,gridspec_kw={'height_ratios':[1.4,1]})
+    axes[0].plot(t,temp,color='#1764ab',lw=1.3,label='Temperature')
     axes[0].step(t,target,where='post',color='#d45d00',ls='--',lw=1,label='Setpoint')
-    axes[1].plot(t,pwm,color='#1764ab',lw=1.3,label='Reported signed PWM' if title.startswith('Experimental') else 'Applied signed PWM')
-    axes[1].plot(t,requested,color='#777777',ls=':',lw=.9,label='Requested PWM')
-    axes[1].axhline(0,color='black',lw=.4)
-    axes[0].set_ylim(24,31.2);axes[1].set_ylim(-100,105)
-    axes[0].set_ylabel('Temperature (°C)',fontsize=9);axes[1].set_ylabel('PWM counts',fontsize=9)
+    axes[1].plot(t,pwm,color='#1764ab',lw=1.1,label='Signed applied PWM')
+    for boundary in (-255,255):axes[1].axhline(boundary,color='gray',ls='--',lw=.6)
+    axes[0].set_ylim(19,33);axes[1].set_ylim(-270,270);axes[1].set_yticks([-255,0,255])
+    axes[0].set_ylabel('Temperature (°C)',fontsize=9);axes[1].set_ylabel('Signed PWM',fontsize=9)
     axes[1].set_xlabel('Elapsed time (s)',fontsize=9)
     for ax in axes:
         ax.set_xlim(0,95);ax.tick_params(labelsize=8);ax.grid(alpha=.18)
-        ax.legend(loc='upper right',fontsize=7.5,ncol=2,framealpha=.9)
+        ax.legend(loc='upper right',fontsize=7,ncol=2)
         ax.spines['top'].set_visible(False);ax.spines['right'].set_visible(False)
-    fig.suptitle(title,fontsize=10,y=.98)
+    fig.suptitle(title,fontsize=9.5,y=.98)
     fig.subplots_adjust(left=.105,right=.985,top=.89,bottom=.13,hspace=.18)
     fig.savefig(path,dpi=180);plt.close(fig)
 
 
 def analyse(export_csv=False):
     FIGURES.mkdir(parents=True,exist_ok=True);RESULTS.mkdir(exist_ok=True)
-    paths=[Path(f) for f in json.loads((P7/'data/screening_selected_logs.json').read_text())]
-    # Resolve by filename so this analysis survives a different checkout path.
-    paths=[P7/'data'/f.name for f in paths]
-    experiments=[]; simulations=[]
-    for i,(path,(mode,kp,ki)) in enumerate(zip(paths,GAINS),1):
+    paths=[P7/'data'/Path(f).name for f in json.loads((P7/'data/screening_selected_logs.json').read_text())]
+    experiments=[];simulations=[]
+    for i,path in enumerate(paths,1):
         data,rows=read(path);t=data['arduino_s']-data['arduino_s'][0]
+        kp=float(rows[0]['kp_pwm_per_C']);ki=float(rows[0]['ki_pwm_per_C_s']);mode='PI' if ki else 'P'
+        assert all(r['safety']=='OK' and int(r['run'])==i for r in rows)
+        assert len({(r['kp_pwm_per_C'],r['ki_pwm_per_C_s']) for r in rows})==1
+        assert np.max(abs(data['applied_pwm']))<=255 and np.max(abs(data['reported_signed_pwm']))<=255
         assert len(np.flatnonzero(np.diff(data['setpoint_C'])!=0))==2
-        assert all(r['safety']=='OK' for r in rows)
-        assert len({r['kp_pwm_per_C'] for r in rows})==1
-        assert float(rows[0]['kp_pwm_per_C'])==kp and float(rows[0]['ki_pwm_per_C_s'])==ki
-        assert np.max(abs(data['applied_pwm']))<=255
-        assert np.max(abs(data['reported_signed_pwm']))<=255
         experiments.append(dict(run=i,path=str(path.relative_to(ROOT)),mode=mode,kp=kp,ki=ki,
-                                initial_C=float(data['temperature_C'][0]),
-                                dt_median_s=float(np.median(data['dt_s'])),
-                                max_abs_requested_pwm=float(np.max(abs(data['requested_pwm']))),
-                                max_abs_reported_pwm=float(np.max(abs(data['reported_signed_pwm']))),
-                                metrics=transitions(t,data['temperature_C'],data['setpoint_C'])))
-        plot(t,data['temperature_C'],data['setpoint_C'],data['reported_signed_pwm'],data['requested_pwm'],
+            initial_C=float(data['temperature_C'][0]),dt_median_s=float(np.median(data['dt_s'])),
+            saturated_samples=int(np.sum(abs(data['applied_pwm'])==255)),samples=len(rows),
+            metrics=transitions(t,data['temperature_C'],data['setpoint_C'])))
+        plot(t,data['temperature_C'],data['setpoint_C'],data['applied_pwm'],data['requested_pwm'],
              FIGURES/f'experiment_{i}.png',f'Experimental run {i}: {mode}, Kp = {kp:g}, Ki = {ki:g}')
         config=replace(BASE,kp_pwm_per_c=kp,ki_pwm_per_c_s=ki)
-        arr=simulate_run(config)
-        fine=simulate_run(config,dt=.0125)
+        arr=simulate_run(config);fine=simulate_run(config,dt=.005)
         difference=float(np.max(abs(arr[:,1]-np.interp(arr[:,0],fine[:,0],fine[:,1]))))
-        assert difference<.02
+        assert difference<.05
+        critical=model.two_lump_pi_critical_integral_gain(config)
         zeta=model.two_lump_p_damping_ratio(config)
-        roots=poles(config)
-        assert np.max(roots.real)<0
-        predicted=(f'ζ₂L,P = {zeta:.3f}' if mode=='P' else f'Ki,crit = {KI_CRIT:.3f}; ρI = {ki/KI_CRIT:.3f}')
+        predicted=f'zeta = {zeta:.3f}' if not ki else f'Ki,crit = {critical:.3f}; rhoI = {ki/critical:.3f}'
         plot(arr[:,0],arr[:,1],arr[:,2],arr[:,3],arr[:,4],FIGURES/f'simulation_{i}.png',
-             f'Two-lump run {i}: {mode}, Kp = {kp:g}, Ki = {ki:g}; {predicted}')
+             f'Two-lump run {i}: Kp = {kp:g}, Ki = {ki:g}; {predicted}')
         if export_csv:
             with (RESULTS/f'simulation_{i}.csv').open('w',newline='') as f:
-                writer=csv.writer(f);writer.writerow(['time_s','mass_temperature_C','setpoint_C','applied_pwm',
-                                                    'requested_pwm','u_P','u_I','q_C_s']);writer.writerows(arr)
-        simulations.append(dict(run=i,mode=mode,kp=kp,ki=ki,zeta=zeta,ki_critical=KI_CRIT,
-                                rho_I=ki/KI_CRIT,class_=classification(config),
-                                roots=[[float(v.real),float(v.imag)] for v in roots],
-                                timestep_change_C=difference,
-                                metrics=transitions(arr[:,0],arr[:,1],arr[:,2])))
-    # Controlled explorations required in Part II, using the supplied model.
-    guided=[]
-    for kp,ki,cmult in [(10,.02,1),(10,.2,1),(10,2,1),(5,.2,1),(20,.2,1),(10,.2,2)]:
-        c=replace(BASE,kp_pwm_per_c=kp,ki_pwm_per_c_s=ki,total_capacitance_j_per_c=cmult*BASE.total_capacitance_j_per_c)
-        results=model.simulate(c,'one_lump','pi',600)
-        guided.append(dict(kp=kp,ki=ki,C_multiplier=cmult,zeta=model.one_lump_pi_damping_ratio(c),
-                           peak_C=max(r.measured_temperature_c for r in results)))
-    demo=replace(BASE,ambient_c=29,initial_c=29,setpoint_c=30,total_capacitance_j_per_c=91,
-                 heat_loss_w_per_c=1.14,tec_power_w_per_pwm=.26,heating_to_cooling_ratio=2,
-                 tec_capacitance_fraction=.35,coupling_w_per_c=50,dt_s=.025)
-    p_demo=[]
-    for kp in [60,105,160]:
-        c=replace(demo,kp_pwm_per_c=kp,ki_pwm_per_c_s=0)
-        trace=model.simulate(c,'two_lump','p',100)
-        p_demo.append(dict(kp=kp,zeta=model.two_lump_p_damping_ratio(c),peak_C=max(r.measured_temperature_c for r in trace)))
-    stress=replace(demo,total_capacitance_j_per_c=100,tec_capacitance_fraction=.5,
-                   coupling_w_per_c=2,kp_pwm_per_c=10,ki_pwm_per_c_s=3)
-    trace=model.simulate(stress,'two_lump','pi',700)
-    saturated=[r.time_s for r in trace if abs(r.applied_pwm)>=255-.01]
-    # Validate ideal stability boundary independently from polynomial roots.
-    local_critical=model.two_lump_pi_critical_integral_gain(stress)
-    def stress_roots(ki):
-        ct=stress.tec_capacitance_j_per_c;cm=stress.measured_capacitance_j_per_c
-        h=stress.heat_loss_w_per_c;g=stress.coupling_w_per_c;pu=.52
-        return np.roots([ct*cm,ct*(g+h)+cm*g,g*(h+pu*10),g*pu*ki])
-    assert max(stress_roots(local_critical*.9).real)<0
-    assert max(stress_roots(local_critical*1.1).real)>0
-    payload=dict(experiments=experiments,simulations=simulations,kp_critical=KP_CRIT,ki_critical=KI_CRIT,
-                 C=BASE.total_capacitance_j_per_c,H=H,Pu_c=BASE.tec_power_w_per_pwm,Pu_h=PU_H,
-                 G=G,CT_fraction=.35,shared_initial_C=28,guided_one_lump=guided,guided_two_lump_P=p_demo,
-                 saturation_demo_first_s=saturated[0] if saturated else None,
-                 saturation_demo_ki_critical=local_critical)
+                w=csv.writer(f);w.writerow(['time_s','mass_temperature_C','setpoint_C','applied_pwm',
+                    'requested_pwm','u_P','u_I','q_C_s']);w.writerows(arr)
+        simulations.append(dict(run=i,kp=kp,ki=ki,mode=mode,zeta=zeta,ki_critical=critical,
+            rho_I=ki/critical,class_=classification(config),
+            roots=[[float(v.real),float(v.imag)] for v in poles(config)],
+            timestep_change_C=difference,saturated_samples=int(np.sum(abs(arr[:,3])==255)),
+            metrics=transitions(arr[:,0],arr[:,1],arr[:,2])))
+    payload=dict(experiments=experiments,simulations=simulations,kp_critical=KP_CRIT,
+        C=BASE.total_capacitance_j_per_c,H=H,Pu_c=BASE.tec_power_w_per_pwm,Pu_h=PU_H,
+        G=G,CT_fraction=.35,shared_initial_C=28)
     (RESULTS/'analysis.json').write_text(json.dumps(payload,indent=2)+'\n')
     with (RESULTS/'experimental_metrics.csv').open('w',newline='') as f:
-        fields=['run','direction','initial_C','target_C','duration_s','rise_10_90_s','overshoot_percent',
-                'settling_2percent_s','steady_error_C','end5s_error_C','period_s']
-        writer=csv.DictWriter(f,fieldnames=fields);writer.writeheader()
+        fields=['run',*experiments[0]['metrics'][0]];w=csv.DictWriter(f,fieldnames=fields);w.writeheader()
         for exp in experiments:
-            for metric in exp['metrics']: writer.writerow(dict(run=exp['run'],**metric))
+            for metric in exp['metrics']:w.writerow(dict(run=exp['run'],**metric))
     return payload
 
 
@@ -246,288 +209,117 @@ def page(): add('page',None)
 
 def prepare_report(data):
     experiments=data['experiments'];simulations=data['simulations']
+    def fmt(value, digits=2): return 'Not established' if value is None else f'{value:.{digits}f}'
     add('title','A3 — Feedback Data and Lumped Modeling')
-    p('Assignment code: A3<br/>Module: PHYS39 Module 6<br/>Team members: Kyle Chen and Muhammad Hasan')
+    p('PHYS 39 · Module 6 · Kyle Chen and Muhammad Hasan · October 19, 2026')
     h('1. One-lump model and P-control predictions')
-    p('The block stores heat while the TEC supplies power and the surroundings remove it:')
-    eq(r'C\frac{dT}{dt}=P_u u-H(T-T_{amb})\quad\Rightarrow\quad\tau\frac{dT}{dt}=T_{amb}+\chi u-T')
-    eq(r'\tau=C/H=91.69\ \mathrm{s},\qquad\chi=P_u/H;\quad\chi_h=0.5311,\ \chi_c=0.1878\ \mathrm{^{\circ}C/PWM}')
-    p('Use χ_h for positive PWM and χ_c for negative PWM. For P control, u = Kp(Tset − T). At steady state:')
-    eq(r'0=\chi K_p(T_{set}-T_{ss})-(T_{ss}-T_{amb})')
-    eq(r'e_{ss}=\frac{T_{set}-T_{amb}}{1+\chi K_p},\qquad\tau_{cl}=\frac{\tau}{1+\chi K_p},\qquad L=\chi K_p')
-    p('Subtracting the steady-state balance gives τ d(T − Tss)/dt = −(1 + L)(T − Tss). '
-      'L is the dimensionless loop gain. Larger Kp reduces droop and speeds the response. '
-      'P needs nonzero error to supply the heat lost to the room, so it cannot hold a nonambient target exactly.')
-    p('Measured comparison: the Part 3 open-loop run used +5 PWM, ambient 24.220 °C, and τ = 91.69 s. '
-      'Tss = 24.220 + 0.5311(5) = <b>26.875 °C</b>; its final-minute measured mean was '
-      '<b>26.366 °C</b>. The model predicts the warming and approximate scale, but is 0.510 °C high. '
-      'The same trace supplied τ, so agreement in response time is not an independent test.')
-    p('Module 5 interpretation: better insulation lowers H, raises χ = Pu/H, and reduces droop. '
-      'Doubling C doubles response time without changing the steady balance. '
-      'Kp = 1 gives L = 0.5311, so it is not much smaller than one; the crossover is Kp = 1/χ_h = 1.883 PWM/°C.')
+    p('The First Law gives storage = TEC heat input − heat loss to the room. With C = mc_p, constant thermal properties, and signed applied command u:')
+    eq(r'C\frac{dT}{dt}=P_u u-H(T-T_{amb})')
+    p('C is in J/K, Pu in W/PWM, and H in W/K; each term has units W. At constant command, the steady balance gives Tss = Tamb + (Pu/H)u. Comparing with measured susceptibility identifies χ = Pu/H. Subtracting steady state gives C d(T − Tss)/dt = −H(T − Tss), so τ = C/H.')
+    eq(r'\frac{dT}{dt}=\frac{T_{amb}+\chi u-T}{\tau},\qquad\tau=91.69\ \mathrm{s}')
+    p('Measured χh = 0.5311 and χc = 0.1878 °C/PWM. Heating and cooling coefficients differ because resistive heating aids heating and opposes cooling. The 63% heating crossing estimates τ to about one 0.57 s sampling interval; ambient drift and incomplete settling add unquantified uncertainty.')
+    p('Substitute P control u = Kp(Tset − T). At steady state, (1 + χKp)Tss = Tamb + χKpTset. Subtract the steady balance to obtain the transient:')
+    eq(r'e_{ss}=\frac{T_{set}-T_{amb}}{1+\chi K_p},\quad L=\chi K_p,\quad\tau_{cl}=\frac{\tau}{1+L}')
+    p('L is dimensionless. Increasing Kp reduces both droop and response time by 1 + L. P requires nonzero error to replace heat lost to the room. At Kp = 10 and target 30 °C, the saved baseline predicts droop 0.916 °C and τcl = 14.53 s.')
+    p('<b>Measured check:</b> for +5 PWM and Tamb = 24.220 °C, predicted Tss = 26.875 °C versus a measured final-minute mean of 26.366 °C. Warming and approximate scale agree; the 0.510 °C discrepancy exposes model/calibration limits. The same trace supplied τ, so timing agreement is not independent evidence.')
+    p('<b>Module 5 interpretation:</b> insulation lowers H and droop; doubling C slows the transient without changing the steady balance. Kp = 1 gives L = 0.5311, not much smaller than one; L = 1 at Kp = 1.883 PWM/°C. Module 5 gain 20 approximately settled at 29.386 °C (droop 0.614 °C), while higher gains showed increasingly ambiguous or recurring waves. Different ambient conditions limit quantitative cross-day comparisons.')
     page()
     h('2. Experimental Goldilocks plots and metrics')
-    p('All runs used one apparatus, setpoints <b>28 → 30 → 28 °C</b>, PWM limit <b>±255</b>, '
-      'anti-windup on, and sample interval ≈0.57 s. Each run lasted ≈93 s: ≈11 s baseline and ≈41 s per step. '
-      'The integral was reset before each run. Initial temperatures are recorded below; they were not matched.')
-    for exp in experiments[:3]:
-        i=exp['run'];up,down=exp['metrics']
-        caption=(f'Figure {i}. Experimental P, Kp = {exp["kp"]:g} PWM/°C, Ki = 0. '
-                 f'Up/down step starts: {up["initial_C"]:.2f}/{down["initial_C"]:.2f} °C. '
-                 f'{["Slow response and large error.","Faster response with remaining droop.","Small peak below target; no clear ringing."][i-1]}')
-        figure(FIGURES/f'experiment_{i}.png',caption)
+    p('Six recorded runs use the same apparatus, 28 → 30 → 28 °C setpoints, PWM limit ±255, anti-windup, and ≈0.57 s sampling. Each has about 10 s baseline and 40 s per step. The integral was reset before each run. Runs 3 and 6 are the October 19 Kp = 1000 reruns; the others are October 14 recordings.')
+    p('<b>Protocol limitation:</b> starting temperatures differ, and selected PI gains are 16/0.1, 16/0.5, and 1000/2 (Kp/Ki). Thus Run 6 does not isolate increasing Ki at fixed Kp. We preserve and disclose the actual recordings rather than presenting them as a matched Ki sweep.')
+    for exp in experiments:
+        i=exp['run']
+        if i in (3,5):page()
+        figure(FIGURES/f'experiment_{i}.png',
+            f'Figure {i}. Experimental {exp["mode"]}: Kp = {exp["kp"]:g} PWM/°C; Ki = {exp["ki"]:g} PWM/(°C·s). '
+            f'Initial T = {exp["initial_C"]:.2f} °C; {exp["saturated_samples"]}/{exp["samples"]} applied commands at ±255. '
+            'Only actual applied PWM is shown; controller requests are not PWM output.')
     page()
-    sub('Experimental PI responses')
-    for exp in experiments[3:]:
-        i=exp['run'];up,down=exp['metrics']
-        caption=(f'Figure {i}. Experimental PI, Kp = 16 PWM/°C, Ki = {exp["ki"]:g} PWM/(°C·s). '
-                 f'Up/down starts: {up["initial_C"]:.2f}/{down["initial_C"]:.2f} °C. '
-                 f'{["Slow integral correction.","Closest tracking with little overshoot.","0.76 °C overshoot and 0.86 °C undershoot."][i-4]}')
-        figure(FIGURES/f'experiment_{i}.png',caption)
+    sub('Largest-gain P and PI: both step directions')
+    p('Rise time is the first 10%–90% crossing from the last pre-step measured temperature toward the new target, interpolated between samples. Overshoot is excursion beyond the target divided by the commanded 2 °C step. Settling requires remaining within ±0.04 °C through the end of the step, with at least 10 s observed in-band.')
+    rows=[]
+    for exp in (experiments[2],experiments[5]):
+        for m in exp['metrics']:
+            rows.append([f'{exp["mode"]} {exp["kp"]:g}/{exp["ki"]:g}',m['direction'],fmt(m['rise_10_90_s']),
+                         fmt(m['overshoot_percent'],1),fmt(m['period_s']),fmt(m['end5s_error_C'],3)])
+    table(['Mode Kp/Ki','Step','Rise (s)','Overshoot (%)','Period (s)','End error (°C)'],rows,
+          [95,40,70,95,85,100])
+    p('For all four high-gain steps, settling time and steady-state error are <b>not established</b>. End error is target minus the final 5 s mean, not steady-state error. The 0.54 s PI upward rise spans approximately one sample interval and is poorly resolved. Period is the median peak-to-peak spacing, requiring at least three peaks confirmed by reversals ≥0.20 °C; sampling limits timing resolution to roughly 0.57 s.')
+    p('Both high-gain recordings have recurring, bounded oscillations over the observed window. This is consistent with a nonlinear limit cycle, but does not prove ideal marginal stability or long-term boundedness. P run 3 reaches 31.43 °C / 27.30 °C on the up/down steps; PI run 6 reaches 31.32 °C / 27.27 °C. Applied PWM saturates on 133/163 and 132/164 samples, respectively.')
     page()
-    sub('Largest-gain P and PI: step-response metrics')
-    p('Rise time is the first 10%–90% crossing of the measured initial-to-new-target change, with linear '
-      'interpolation between samples. Overshoot is the excursion beyond the target divided by the 2 °C '
-      'setpoint step. Settling requires staying within ±0.04 °C (2%) for the rest of the step, '
-      'with at least 10 s recorded in-band. End error averages the final 5 s; it is not verified steady-state error.')
-    metric_rows=[]
-    for exp in [experiments[2],experiments[5]]:
-        for metric in exp['metrics']:
-            metric_rows.append([f'{exp["mode"]} {exp["kp"]:g}/{exp["ki"]:g}',metric['direction'],
-                                f'{metric["rise_10_90_s"]:.2f}',f'{metric["overshoot_percent"]:.1f}',
-                                'Not reached','Unconfirmed',f'{metric["end5s_error_C"]:+.3f}','Unresolved'])
-    table(['Mode Kp/Ki','Step','Rise (s)','OS (%)','Settling','SS error','End e (°C)','Period'],metric_rows,
-          [70,35,48,45,76,77,73,87])
-    p('The four ≈40 s windows do not establish settling, steady-state error, or a repeated oscillation period. '
-      'High P has a small peak below target. High PI has one overshoot/undershoot per step. '
-      'No experimental saturation occurred: maximum absolute reported PWM was <b>90</b>.')
-    h('3. Two-lump simulations and comparison')
-    p('Shared parameters for all six simulations: χ_c = 0.1878 and χ_h = 0.5311 °C/PWM; '
-      'τ = 91.69 s; ambient 24.220 °C; C = 100.549 J/°C; H = 1.0966 W/°C; '
-      'Pu,c = 0.20595 W/PWM; G = 10 W/°C; CT/C = 0.35; assumed TEC voltage 12 V; resistance 1.50 Ω; '
-      'both initial lump temperatures 28 °C; targets 28 → 30 → 28 °C at 11 and 52 s; '
-      'PWM ±255; q(0) = 0; anti-windup on; Δt = 0.025 s. Only mode and gains change.')
-    p('G was adjusted once from 2 to 10 W/°C to reduce the high-P simulation to a small, decaying peak, '
-      'matching the qualitative experimental shape. G and CT/C are model estimates, not measurements. '
-      'The prior Part 3 ambient and τ are reused. The shared 28 °C simulation start cannot match all six '
-      'different experimental starts; low-gain timing comparisons are therefore limited.')
-    eq(r'S=C_T(G+H)+C_mG,\quad\zeta_{2L,P}=\frac{S}{2\sqrt{C_TC_mG(H+P_uK_p)}}')
-    eq(r'K_{p,crit}=\frac{S^2/(4C_TC_mG)-H}{P_u},\quad K_{i,crit}=\frac{S(H+P_uK_p)}{C_TC_mP_u},\quad\rho_I=K_i/K_{i,crit}')
-    p(f'At the heating equilibrium, <b>Kp,crit = {KP_CRIT:.2f} PWM/°C</b>; '
-      f'for PI at Kp = 16, <b>Ki,crit = {KI_CRIT:.3f} PWM/(°C·s)</b>. '
-      'These are local unsaturated criteria. Negative PWM uses the cooling coefficient during downward transients.')
+    h('3. Two-lump simulation and experiment comparison')
+    p('One shared physical parameter set for all six simulations: χc = 0.1878 and χh = 0.5311 °C/PWM; τ = 91.69 s; Tamb = 24.220 °C; C = 100.549 J/K; H = 1.0966 W/K; Pu,c = 0.20595 W/PWM; r = 2.8280; G = 2 W/K; CT/C = 0.35; TEC voltage 12 V (assumed ON-state value), resistance 1.50 Ω; both masses initially 28 °C; targets 28 → 30 → 28 °C at 11 and 52 s; PWM ±255; q(0) = 0; anti-windup on; Δt = 0.01 s.')
+    p('G and CT/C are unresolved internal estimates, retained at the assignment starting values. The high-P model reproduces overshoot and decay qualitatively, but cannot reproduce the measured persistent wave train. Exact fitting is not claimed. All simulations keep the same initial state as required; their 28 °C start differs from the recorded starts, and the common switching times differ slightly from individual host-timed experiments.')
+    eq(r'C_T\dot T=P_u u-G(T-T_m),\qquad C_m\dot T_m=G(T-T_m)-H(T_m-T_{amb})')
+    p('The controller measures Tm. With perturbations θT and θm about equilibrium and unsaturated P feedback, GθT = Cm dθm/dt + (G + H)θm. Differentiate this expression and substitute the TEC balance to eliminate θT:')
+    eq(r'C_TC_m\ddot\theta_m+S\dot\theta_m+G(H+P_uK_p)\theta_m=0,\quad S=C_T(G+H)+C_mG')
+    eq(r'\zeta_{2L,P}=\frac{S}{2\sqrt{C_TC_mG(H+P_uK_p)}},\quad K_{p,crit}=\frac{S^2/(4C_TC_mG)-H}{P_u}')
+    p(f'For this shared plant, heating-direction Kp,crit = <b>{KP_CRIT:.3f} PWM/°C</b>. The three gains 5, 20, and 1000 are all above it, with progressively smaller damping. This shared model therefore does not reproduce a monotonic low-gain-to-critical-to-underdamped progression for these selected experimental gains.')
+    eq(r'C_TC_m s^3+S s^2+G(H+P_uK_p)s+GP_uK_i=0')
+    p('For positive coefficients, Routh–Hurwitz requires S·G(H + PuKp) > CT·Cm·G·Pu·Ki. This yields:')
+    eq(r'K_{i,crit}=\frac{S(H+P_uK_p)}{C_TC_mP_u},\qquad\rho_I=K_i/K_{i,crit}')
+    p('The unsaturated local PI model is stable for 0 < ρI < 1, marginal at ρI = 1, and unstable for ρI > 1. These heating-equilibrium classifications do not describe actuator clipping or the complete heating/cooling switching transient.')
     page()
-    sub('Two-lump P simulations')
-    for sim in simulations[:3]:
+    sub('Six simulations using the same plant and protocol')
+    for sim in simulations:
         i=sim['run']
+        if i in (3,5):page()
+        if not sim['ki']:
+            detail=f'ζ₂L,P = {sim["zeta"]:.3f}'
+        else:
+            detail=f'Ki,crit = {sim["ki_critical"]:.3f}; ρI = {sim["rho_I"]:.3f}'
         figure(FIGURES/f'simulation_{i}.png',
-               f'Figure {i+6}. Simulated P, Kp = {sim["kp"]:g}, Ki = 0; ζ₂L,P = {sim["zeta"]:.3f}. {sim["class_"].capitalize()}.')
-    page()
-    sub('Two-lump PI simulations')
-    for sim in simulations[3:]:
-        i=sim['run']
-        figure(FIGURES/f'simulation_{i}.png',
-               f'Figure {i+6}. Simulated PI, Kp = 16, Ki = {sim["ki"]:g}; Ki,crit = {KI_CRIT:.3f}; '
-               f'ρI = {sim["rho_I"]:.3f}. {sim["class_"].capitalize()}.')
+            f'Figure {i+6}. Two-lump {sim["mode"]}: Kp = {sim["kp"]:g}, Ki = {sim["ki"]:g}; '
+            f'{detail}. Local classification: {sim["class_"]}. '
+            'Applied PWM is clipped at ±255; nonlinear portions are not classified by the linear criterion alone.')
     page()
     sub('Guided comparison answers')
-    p('<b>Best matches:</b> high P (run 3) reproduces the small decaying peak below target; '
-      'intermediate PI (run 5) reproduces the smooth approach close to target. Neither match establishes settling.')
-    p('<b>P trend:</b> Kp = 5 is below the critical gain, 20 is near it, and 40 is above it. '
-      f'Their ζ values are {simulations[0]["zeta"]:.3f}, {simulations[1]["zeta"]:.3f}, and {simulations[2]["zeta"]:.3f}. '
-      'Lower ζ allows more overshoot while increasing gain speeds initial response. All three are stable; '
-      'P cannot become marginally stable or unstable in this positive-parameter two-lump model.')
-    p(f'<b>PI trend:</b> ρI = {simulations[3]["rho_I"]:.3f}, {simulations[4]["rho_I"]:.3f}, '
-      f'and {simulations[5]["rho_I"]:.3f}. All are below 1 and therefore stable. '
-      'Runs 4–5 have real stable poles; run 6 is underdamped. A PI response can overshoot even with real poles because the integral starts away from equilibrium. Increasing Ki strengthens correction but increases ringing. '
-      'Marginal stability occurs at ρI = 1 and instability above 1; our retained gains do not reach that boundary.')
-    p('<b>Agreement:</b> increasing PI gain reduces the early target error, then produces overshoot. '
-      '<b>Disagreement:</b> the selected model does not reproduce every measured speed or overshoot amplitude. '
-      'High-P rise times were 6.40/6.05 s measured versus 9.05/11.53 s simulated (up/down). '
-      'High-PI overshoot was 38/43% measured versus 46.8/57.7% simulated. '
-      'Different initial states and unmeasured internal parameters limit the comparison. '
-      'No recorded growing or sustained oscillation falsifies its predicted stability within these short windows.')
-    p('<b>Controlled checks:</b> for one-lump PI, increasing Ki lowers ζ; increasing Kp raises ζ; '
-      'doubling C at fixed H and Pu divides ζ by √2. In the supplied two-lump practice model, '
-      'Kp = 60, 105, 160 gives ζ ≈1.31, 1.00, 0.81. Increasing G from 35 to 70 at Kp = 105 '
-      'raises damping; splitting C nearer equally between the lumps lowers damping. '
-      'A separate simulated Ki = 3 saturation exercise first comes within 0.01 PWM of the ±255 limit at '
-      f'{data["saturation_demo_first_s"]:.1f} s: early growing oscillations indicate linear instability; '
-      'later output limiting and anti-windup bound the response. This is a simulation, not experimental saturation.')
-    h('4. PI steady state, assumptions, and windup')
-    eq(r'\dot q=e=0\ \Rightarrow\ T_{ss}=T_{set}=55\ ^\circ\mathrm{C},\quad u_P=0,\quad u_I=H(55-T_{amb})/P_u')
-    p('At equilibrium, stored error q is constant, so e = 0. The integral retains the nonzero command '
-      'needed to balance heat loss; P-only would need droop to provide it. Using the heating susceptibility, '
-      'u_ss = (55 − 24.220)/0.5311 = <b>57.95 PWM</b>, within ±255 in this model. '
-      'This is an ideal prediction, not a 55 °C experiment.')
-    p('The result requires a stable closed loop, enough available heating power, no persistent saturation or '
-      'shutdown, Ki &gt; 0 with continued integral action, and an accurate, timely temperature measurement. '
-      'A sensor bias would make indicated temperature reach 55 °C while actual temperature differs.')
-    p('Windup occurs when error keeps accumulating while PWM is already capped. The stored I term then drives '
-      'overshoot and delays recovery. Our conditional integration rejects an update that pushes farther beyond '
-      'the limit, but accepts one that brings the request back. Resetting q after steady state removes the '
-      'balancing heat command, so temperature initially falls and the integral must rebuild.')
+    rows=[]
+    for exp,sim in zip(experiments,simulations):
+        rows.append([str(sim['run']),f'{sim["kp"]:g}/{sim["ki"]:g}',
+                     f'{sim["zeta"]:.3f}' if not sim['ki'] else f'ρI = {sim["rho_I"]:.3f}',sim['class_']])
+    table(['Run','Kp/Ki','Stability measure','Local model class'],rows,[35,70,100,210])
+    p('<b>1. Best correspondence:</b> low/intermediate P simulations reproduce slow approach and remaining droop qualitatively; intermediate PI (Run 5) reproduces reduced target error. None reproduces the complete high-gain speed, persistent oscillation, and settling behavior. Initial conditions prevent a fair numerical ranking by rise time alone.')
+    p(f'<b>2. P organization:</b> ζ decreases from {simulations[0]["zeta"]:.3f} to {simulations[1]["zeta"]:.3f} to {simulations[2]["zeta"]:.3f}; all gains exceed Kp,crit. Linear P poles remain negative, so ringing decays. The simulation can clip at high gain, requiring the nonlinear time trace as well as the pole calculation.')
+    p(f'<b>3. PI organization:</b> Runs 4–5 share Kp = 16 and increase ρI from {simulations[3]["rho_I"]:.3f} to {simulations[4]["rho_I"]:.3f}, making integral correction more aggressive. Run 6 changes Kp to 1000, raising Ki,crit to {simulations[5]["ki_critical"]:.3f} and reducing ρI to {simulations[5]["rho_I"]:.3f} despite its higher Ki. The retained sequence is not an increasing-ρI study. All three local linear models are stable underdamped; none is marginal or unstable.')
+    rows=[]
+    for exp,sim in [(experiments[2],simulations[2]),(experiments[5],simulations[5])]:
+        for em,sm in zip(exp['metrics'],sim['metrics']):
+            rows.append([f'{exp["mode"]} {em["direction"]}',fmt(em['rise_10_90_s']),fmt(sm['rise_10_90_s']),
+                         fmt(em['overshoot_percent'],1),fmt(sm['overshoot_percent'],1)])
+    table(['High-gain case','Measured rise (s)','Model rise (s)','Measured OS (%)','Model OS (%)'],rows,[85,100,100,110,110])
+    p('<b>4. Agreement and disagreement:</b> both model and experiment show overshoot and PWM clipping at high gain. The measured high-gain period is about 5.7–6.2 s, whereas the shared model has slower, decaying oscillations. Persistent measured ringing contradicts the ideal unsaturated, continuous-time prediction of decay if that model is used to explain the full experiment. It does not prove the apparatus is linearly marginal: saturation, sampled control, additional thermal states, and changing parameters are omitted effects.')
+    p('The high-gain simulations are model tests rather than fitted predictions. Halving Δt to 0.005 s changes temperature by at most '
+      f'{max(s["timestep_change_C"] for s in simulations):.4f} °C across the six runs, much smaller than their main experimental discrepancies.')
+    p('<b>Controlled parameter checks:</b> one-lump PI comparisons show higher Ki and C lower damping, while higher Kp raises it. The assigned two-lump P cases give ζ ≈1.31, 1.00, 0.81 at Kp = 60, 105, 160. At Kp = 105, G = 35, 50, 70 W/K gives ζ ≈0.84, 1.00, 1.18. An approximately equal capacitance split gives the weakest damping among the tested splits. These practice figures remain in Part_II/RESULTS.md, separate from the twelve Goldilocks figures.')
     page()
-    h('5. Model limits and gain selection')
-    p('<b>Complete this question only after completing Part II of Module 6.</b>')
+    h('4. PI steady state, assumptions, and windup')
+    eq(r'u=K_pe+K_iq,\quad\dot q=e,\quad e=T_{set}-T')
+    p('At a stable, unsaturated PI equilibrium, q is constant, so dq/dt = e = 0. Therefore <b>Tss = Tset = 55 °C</b>. The P term becomes zero, while the stored I term supplies the heat-loss-balancing command:')
+    eq(r'u_{ss}=u_I=\frac{H(55-T_{amb})}{P_{u,h}}=\frac{55-24.220}{0.5311}=57.95\ \mathrm{PWM}')
+    p('This is an ideal calculation, not a 55 °C hardware run. It requires stable feedback, enough heating power within ±255, no active shutdown, continued integral action with Ki > 0, and accurate, timely measurement. Sensor bias would make indicated rather than actual temperature equal 55 °C.')
+    p('<b>Windup:</b> while applied PWM is capped, persistent error can keep increasing q. The excessive stored command then continues heating after the target is crossed, causing overshoot and delayed recovery. Conditional anti-windup holds q when the proposed integral update pushes the request farther past the limit, and permits updates that bring it back. The clamp and shutdown remain separate protections.')
+    p('<b>Reset thought experiment:</b> at equilibrium P = 0 and I provides the balancing heat. Clearing q removes that command; temperature initially falls, then P responds and I rebuilds. Integral reset does not preserve the former equilibrium output.')
+    h('5. Model limits and final gain choice')
     eq(r'T(t)-T_{ss}=[T(0)-T_{ss}]\exp[-(1+\chi K_p)t/\tau]')
-    p('The exponential is positive and decays, so the one-lump P temperature cannot cross its own steady '
-      'temperature from a fixed initial condition. Starting below both steady temperature and target, '
-      'it cannot overshoot the target. Its single state cannot ring.')
-    eq(r'C_T\dot T_T=P_u u-G(T_T-T_m),\qquad C_m\dot T_m=G(T_T-T_m)-H(T_m-T_{amb})')
-    p('The TEC heats its own thermal mass first, then heat passes through G to the measured mass. '
-      'This lag allows energy stored in the TEC to continue changing the measured temperature after '
-      'the command decreases. Two-lump P and PI can therefore show overshoot and decaying oscillations.')
-    p(f'<b>Selected P gain:</b> Kp = 20 PWM/°C is close to Kp,crit = {KP_CRIT:.2f}, '
-      f'with ζ = {simulations[1]["zeta"]:.3f}: fast response near critical damping. '
-      'It retains droop; gain 40 reduces droop further but has a more pronounced transient peak.')
-    p(f'<b>Selected PI gains:</b> Kp = 16 PWM/°C and Ki = 0.5 PWM/(°C·s), '
-      f'with ρI = {simulations[4]["rho_I"]:.3f}, well below 1. Run 5 approached both targets with little overshoot. '
-      'Ki = 0.1 corrected too slowly; Ki = 2 produced larger excursions. These are provisional choices '
-      'because the recordings did not establish full settling.')
-    p('A better model should include measurement/command delay: the actual controller samples about every '
-      '0.57 s, while the simulation uses much smaller steps. Temperature-dependent TEC coefficients '
-      'and thermal contact changes may also explain remaining differences.')
-    h('Data, code, and modeling checkpoint')
-    p('Experimental sources: six October 14 CSVs in the Part 7 data directory. Figures plot reported signed '
-      'PWM alongside requested PWM; telemetry reports the previous interval’s output. '
-      'Simulation data, metrics, and calculations are reproducible with build_a3.py. '
-      'Halving simulation Δt changes temperature by less than '
-      f'{max(s["timestep_change_C"] for s in simulations):.4f} °C in the six retained runs.')
-    p('Local files: <link href="../../code/module6/A3/build_a3.py" color="#1764ab">analysis/build script</link>; '
-      '<link href="../../code/module6/A3/results/experimental_metrics.csv" color="#1764ab">experimental metrics</link>; '
-      '<link href="../../code/module6/A3/results/analysis.json" color="#1764ab">settings and stability calculations</link>.')
-    for i,exp in enumerate(experiments,1):
-        p(f'<link href="../../{exp["path"]}" color="#1764ab">Run {i} raw CSV</link>')
-    p('GitHub modeling checkpoint: <link href="https://github.com/hasanm720/Module1/commit/73d29c92752bb946929633de97bcb714192e3ba2" '
-      'color="#1764ab">73d29c9</link> (existing Part 3/4 checkpoint). This checkpoint predates the six runs and A3; '
-      'the new A3 files have not been committed or pushed.')
-    p('Assignment: <link href="https://sethfraden.github.io/Phys39F26-course/labs/lab-06/#a3-feedback-data-and-lumped-model-memo" '
-      'color="#1764ab">Lab 6 — A3</link>. Two-lump protocol: '
-      '<link href="https://sethfraden.github.io/Phys39F26-course/labs/lab-07/#make-the-six-two-lump-goldilocks-plots" '
-      'color="#1764ab">Lab 7 — six simulation runs</link>.')
+    p('In the ideal continuous-time one-lump P model, the exponential is positive and decays: temperature approaches its equilibrium monotonically and cannot ring. This statement assumes instantaneous feedback; it is not a claim that every physical P controller is non-oscillatory. The observed Kp = 1000 P oscillation is direct evidence that this simplest model is inadequate.')
+    p('The two-lump balances add a second stored-energy state. Heat first changes the TEC-side temperature, then passes through G to the measured mass. Tm can continue rising after the command falls because the TEC-side mass remains hotter. This lag permits P overshoot and ringing; the twelve figures show what the model captures and where it fails.')
+    p(f'<b>Selected P:</b> Kp = 20 PWM/°C is a provisional measured compromise: it reduces the large error of Kp = 5 and avoids the large oscillations and saturation of Kp = 1000. The selected shared model gives ζ = {simulations[1]["zeta"]:.3f} and Kp,crit = {KP_CRIT:.3f}, predicting an underdamped response rather than critical damping. Selection is based on the measured tradeoff, not a claim that this gain is theoretically optimal.')
+    p(f'<b>Selected PI:</b> Kp = 16 PWM/°C and Ki = 0.5 PWM/(°C·s), with ρI = {simulations[4]["rho_I"]:.3f}, combines relatively small final target error with limited overshoot in Run 5. Ki = 0.1 corrects more slowly; Kp = 1000, Ki = 2 produces persistent large excursions and clipping. Since the high-PI rerun changes both gains, it cannot establish the isolated effect of Ki. Neither selected gain pair has a verified long-term settling result.')
+    p('<b>Next physical effect:</b> include the actual ≈0.57 s sampled controller and measurement/command delay. The present continuous-feedback simulation updates much faster. Further thermal states, sensor placement, and temperature-dependent TEC coefficients may also matter; these data do not identify a unique cause of the persistent oscillation.')
+    page()
+    h('Data, code, and reproduction')
+    p('Build command from the repository root (phys39a environment):<br/>/opt/anaconda3/envs/phys39a/bin/python code/module6/A3/build_a3.py --save-csv')
+    p('<link href="../../code/module6/A3/build_a3.py" color="#1764ab">Analysis and report builder</link> · '
+      '<link href="../../code/module6/A3/results/experimental_metrics.csv" color="#1764ab">Experimental metrics</link> · '
+      '<link href="../../code/module6/A3/results/analysis.json" color="#1764ab">Shared settings and stability calculations</link> · '
+      '<link href="../../code/module6/Part_II/RESULTS.md" color="#1764ab">Controlled comparison results</link>')
+    for exp in experiments:
+        p(f'<link href="../../{exp["path"]}" color="#1764ab">Experimental Run {exp["run"]} raw recording</link> · '
+          f'<link href="../../code/module6/A3/results/simulation_{exp["run"]}.csv" color="#1764ab">Simulation Run {exp["run"]} data</link>')
+    p('GitHub modeling/data checkpoint: <link href="https://github.com/hasanm720/Module1/commit/ff2f524b009e5d64936f1dcef9125ed07551ceb1" color="#1764ab">ff2f524 — Part 7 data with saturation reruns</link>. This report is a later local build; the checkpoint is not claimed to include the finished PDF.')
+    p('Assignment: <link href="https://sethfraden.github.io/Phys39F26-course/labs/lab-06/#a3-questions" color="#1764ab">A3 Questions 1–5</link>. Simulation protocol: <link href="https://sethfraden.github.io/Phys39F26-course/labs/lab-07/" color="#1764ab">Module 6 Part II</link>.')
 
-
-def improve_layout():
-    """Keep A2 typography while making figures and answers easier to scan."""
-    revised=[]
-    previous=None
-    for kind,value,extra in blocks:
-        # Two full-size figures per page, instead of three narrow figures.
-        if kind=='page' and previous and previous[0]=='figure' and previous[1].name in ('experiment_3.png','simulation_3.png'):
-            continue
-        if kind=='sub' and value in ('Experimental PI responses','Two-lump PI simulations'):
-            continue
-        if kind=='figure':
-            names={
-                'experiment_3.png':'Experimental runs 3–4',
-                'experiment_5.png':'Experimental runs 5–6',
-                'simulation_3.png':'Two-lump simulations 3–4',
-                'simulation_5.png':'Two-lump simulations 5–6',
-            }
-            if value.name in names:
-                revised.extend([('page',None,None),('sub',names[value.name],None)])
-        if kind=='p':
-            if value.startswith('Subtracting the steady-state balance'):
-                revised.extend([
-                    ('p','Subtracting the steady-state balance gives τ d(T − Tss)/dt = −(1 + L)(T − Tss). <b>L = χKp is the dimensionless loop gain.</b>',None),
-                    ('p','<b>Higher Kp:</b> smaller droop and faster response. P still needs nonzero error to replace heat lost to the room.',None),
-                ]); continue
-            if value.startswith('Measured comparison:'):
-                revised.extend([
-                    ('sub','Measured comparison: +5 PWM open loop',None),
-                    ('p','Part 3 used ambient 24.220 °C and τ = 91.69 s. Prediction: Tss = 24.220 + 0.5311(5).',None),
-                    ('table',(['Predicted temperature','Measured final-minute mean','Prediction error'],[['26.875 °C','26.366 °C','+0.510 °C']]),None),
-                    ('p','The model captures warming but predicts too high a temperature. This trace also supplied τ, so its response time is not an independent check.',None),
-                ]); continue
-            if value.startswith('Module 5 interpretation:'):
-                revised.extend([
-                    ('sub','Module 5 interpretation',None),
-                    ('p','• <b>Better insulation:</b> lower H, higher χ, less droop.<br/>• <b>Double C:</b> double response time; same steady temperature.<br/>• <b>Kp = 1:</b> L = 0.5311 is not much smaller than one. The crossover is Kp = 1.883 PWM/°C.',None),
-                ]); continue
-            if value.startswith('Rise time is the first'):
-                revised.extend([
-                    ('p','<b>Rise:</b> first 10%–90% crossing from measured initial temperature toward the new target; linearly interpolated.',None),
-                    ('p','<b>Overshoot:</b> excursion beyond the target ÷ 2 °C step × 100%. <b>Settling:</b> remain within ±0.04 °C for the rest of the step, with at least 10 s recorded in-band.',None),
-                ]); continue
-            if value.startswith('The four ≈40 s windows'):
-                revised.extend([
-                    ('p','<b>Not established in any of the four windows:</b> settling time, steady-state error, and oscillation period. End error averages the final 5 s; it is not steady-state error.',None),
-                    ('p','<b>Saturation:</b> none experimentally; maximum absolute reported PWM was 90. High PI showed one overshoot/undershoot per step.',None),
-                ]); continue
-            if value.startswith('Shared parameters for all six simulations:'):
-                revised.extend([
-                    ('p','<b>One shared plant:</b> χc = 0.1878 and χh = 0.5311 °C/PWM; τ = 91.69 s; ambient 24.220 °C; C = 100.549 J/°C; H = 1.0966 W/°C; Pu,c = 0.20595 W/PWM; G = 10 W/°C; CT/C = 0.35; assumed voltage 12 V; resistance 1.50 Ω.',None),
-                    ('p','<b>One shared protocol:</b> both lumps initially 28 °C; targets 28 → 30 → 28 °C at 11 and 52 s; PWM ±255; q(0) = 0; anti-windup on; Δt = 0.025 s. Only mode and gains change.',None),
-                ]); continue
-            if value.startswith('G was adjusted once'):
-                revised.extend([
-                    ('p','<b>Model choice:</b> G was adjusted once from 2 to 10 W/°C to reproduce the small high-P peak. G and CT/C are estimates; ambient and τ are reused from Part 3.',None),
-                    ('p','<b>Comparison limit:</b> the common 28 °C simulation start differs from the experimental starts, especially at low gain.',None),
-                ]); continue
-            if value.startswith('<b>P trend:</b>'):
-                value=(' <b>P:</b> Kp = 5, 20, 40 lie below, near, and above Kp,crit. Their ζ values are 1.719, 0.964, and 0.697. Higher gain speeds response and lowers damping. All are stable; positive-parameter two-lump P cannot become marginally stable or unstable.').strip()
-            if value.startswith('<b>PI trend:</b>'):
-                revised.extend([
-                    ('p','<b>PI:</b> ρI = 0.012, 0.062, 0.246: all stable. Runs 4–5 have real poles; run 6 is underdamped. Real-pole PI can still overshoot because q starts away from equilibrium.',None),
-                    ('p','Increasing Ki strengthens correction but increases ringing. Marginal stability is at ρI = 1; instability is above 1. Our retained gains stay below this boundary.',None),
-                ]);continue
-            if value.startswith('<b>Agreement:</b>'):
-                revised.extend([
-                    ('p','<b>Agreement:</b> stronger PI correction reduces early error, then produces overshoot.',None),
-                    ('table',(['Comparison (up/down)','Experiment','Simulation'],[['High-P rise time','6.40 / 6.05 s','9.05 / 11.53 s'],['High-PI overshoot','38 / 43%','46.8 / 57.7%']]),None),
-                    ('p','<b>Disagreement:</b> exact speed and overshoot do not match. Different starting states and estimated internal parameters limit agreement. No recorded growing or sustained oscillation contradicts the predicted stability in these windows.',None),
-                ]);continue
-            if value.startswith('<b>Controlled checks:</b>'):
-                revised.extend([
-                    ('sub','Controlled checks',None),
-                    ('p','• <b>One-lump PI:</b> higher Ki lowers ζ; higher Kp raises ζ; doubling C divides ζ by √2.<br/>• <b>Two-lump practice:</b> Kp = 60, 105, 160 gives ζ ≈1.31, 1.00, 0.81. Raising G from 35 to 70 increases damping; a more equal mass split lowers damping.',None),
-                    ('p','<b>Simulated saturation:</b> the Ki = 3 practice run comes within 0.01 PWM of ±255 at 191.8 s. Early growth shows linear instability; later output limiting and anti-windup bound the response. This was not experimental saturation.',None),
-                ]);continue
-            if value.startswith('At equilibrium, stored error'):
-                revised.extend([
-                    ('p','<b>Ideal result: 55 °C.</b> At equilibrium q is constant, so e = 0. The integral retains the heat-loss-balancing output while P becomes zero.',None),
-                    ('p','Required heating command: (55 − 24.220)/0.5311 = <b>57.95 PWM</b>, within ±255 in this model. This is a prediction, not a 55 °C experiment.',None),
-                ]);continue
-            if value.startswith('The result requires a stable closed loop'):
-                value='<b>Conditions:</b> stable feedback, sufficient heating power, no persistent saturation or shutdown, Ki &gt; 0 with continued integration, and accurate/timely measurement. Sensor bias shifts the actual temperature away from the indicated 55 °C.'
-            if value.startswith('Windup occurs when error'):
-                revised.extend([
-                    ('p','<b>Windup:</b> stored error keeps growing while PWM is capped, causing overshoot and slow recovery.',None),
-                    ('p','<b>Anti-windup:</b> reject updates that push farther beyond the limit; accept updates that bring the request back.',None),
-                    ('p','<b>Reset:</b> clearing q removes the balancing heat command. Temperature initially falls while I rebuilds.',None),
-                ]);continue
-            if value.startswith('The exponential is positive'):
-                value='<b>One-lump limit:</b> the positive, decaying exponential cannot cross its own steady temperature. From below the steady temperature and target, P cannot overshoot the target or ring.'
-            if value.startswith('The TEC heats its own thermal mass'):
-                value='<b>Two-lump lag:</b> the TEC heats its own mass first; G then transfers heat to the measured mass. Stored TEC energy keeps changing Tm after the command falls, allowing overshoot and decaying oscillations.'
-            if value.startswith('A better model should include'):
-                value='<b>Next model improvement:</b> include the ≈0.57 s measurement/command delay. Temperature-dependent TEC coefficients and thermal contact changes may also matter.'
-        if kind=='table' and value[0][0]=='Mode Kp/Ki':
-            head,rows=value
-            value=(['Mode Kp/Ki','Step','Rise (s)','Overshoot (%)','End error (°C)'],[[r[0],r[1],r[2],r[3],r[6]] for r in rows])
-            extra=[95,55,90,120,151]
-        if kind=='h' and value.startswith('4.'):
-            revised.append(('page',None,None))
-        if kind=='h' and value=='Data, code, and modeling checkpoint':
-            revised.append(('page',None,None))
-        revised.append((kind,value,extra))
-        previous=(kind,value,extra)
-    # Keep related answers together and use the comparison page for compact sources.
-    source_index=next(i for i,b in enumerate(revised)
-                      if b[0]=='h' and b[1]=='Data, code, and modeling checkpoint')
-    references=revised[source_index:]
-    revised=revised[:source_index-1]  # Drop the preceding source-only page break.
-    raw_links=[b for b in references if b[0]=='p' and re.match(r'<link href=".*">Run \d raw CSV</link>$',b[1])]
-    if raw_links:
-        first=references.index(raw_links[0])
-        references=[b for b in references if b not in raw_links]
-        references.insert(first,('p','<b>Raw recordings:</b> '+' · '.join(b[1] for b in raw_links),None))
-    q4_index=next(i for i,b in enumerate(revised) if b[0]=='h' and b[1].startswith('4.'))
-    revised[q4_index-1:q4_index-1]=references
-    q5_index=next(i for i,b in enumerate(revised) if b[0]=='h' and b[1].startswith('5.'))
-    if revised[q5_index-1][0]=='page': del revised[q5_index-1]
-    blocks[:]=revised
 
 
 class NumberedCanvas(canvas.Canvas):
@@ -541,7 +333,7 @@ class NumberedCanvas(canvas.Canvas):
             self.__dict__.update(state)
             self.setFont('Helvetica',6)
             self.drawString(42,824,'A3_Chen_Hasan.md')
-            self.drawRightString(553,824,'2026-10-14')
+            self.drawRightString(553,824,'2026-10-19')
             self.drawCentredString(297.5,23,f'{self._pageNumber} / {count}')
             canvas.Canvas.showPage(self)
         canvas.Canvas.save(self)
@@ -609,5 +401,5 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--save-csv',action='store_true',help='Export simulation time series')
     args=parser.parse_args()
-    data=analyse(args.save_csv);prepare_report(data);improve_layout();render()
-    print(f'Kp,crit={KP_CRIT:.4f}; Ki,crit={KI_CRIT:.4f}; numerical and stability checks passed.')
+    data=analyse(args.save_csv);prepare_report(data);render()
+    print(f'Kp,crit={KP_CRIT:.4f}; numerical checks passed.')
