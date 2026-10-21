@@ -1,34 +1,44 @@
 # A3 — Feedback Data and Lumped Modeling
 
-PHYS 39 · Module 6 · Kyle Chen and Muhammad Hasan · October 19, 2026
+PHYS 39 · Module 6 · Kyle Chen and Muhammad Hasan · October 21, 2026
 
 ## 1. One-lump model and P-control predictions
 
-The First Law gives storage = TEC heat input − heat loss to the room. With C = mc_p, constant thermal properties, and signed applied command u:
+Treat the TEC and block as one temperature. Heat stored equals TEC heat input minus heat lost to the room:
 
 $$
 C\frac{dT}{dt}=P_u u-H(T-T_{amb})
 $$
 
-C is in J/K, Pu in W/PWM, and H in W/K; each term has units W. At constant command, the steady balance gives Tss = Tamb + (Pu/H)u. Comparing with measured susceptibility identifies χ = Pu/H. Subtracting steady state gives C d(T − Tss)/dt = −H(T − Tss), so τ = C/H.
+C is thermal capacitance (J/K), H is heat-loss conductance (W/K), and Pu converts signed PWM into thermal power (W/PWM). For constant u, the steady balance gives Tss = Tamb + (Pu/H)u. Temperature approaches this value exponentially:
 
 $$
-\frac{dT}{dt}=\frac{T_{amb}+\chi u-T}{\tau},\qquad\tau=91.69\ \mathrm{s}
+\chi=\frac{P_u}{H},\qquad T-T_{ss}=[T(0)-T_{ss}]e^{-t/(C/H)},\qquad\tau=\frac{C}{H}
 $$
 
-Measured χh = 0.5311 and χc = 0.1878 °C/PWM. Heating and cooling coefficients differ because resistive heating aids heating and opposes cooling. The 63% heating crossing estimates τ to about one 0.57 s sampling interval; ambient drift and incomplete settling add unquantified uncertainty.
-
-Substitute P control u = Kp(Tset − T). At steady state, (1 + χKp)Tss = Tamb + χKpTset. Subtract the steady balance to obtain the transient:
+Using our measured τ = 91.69 s, χh = 0.5311 and χc = 0.1878 °C/PWM, the model becomes:
 
 $$
-e_{ss}=\frac{T_{set}-T_{amb}}{1+\chi K_p},\quad L=\chi K_p,\quad\tau_{cl}=\frac{\tau}{1+L}
+\frac{dT}{dt}=\frac{T_{amb}+\chi u-T}{91.69\ \mathrm{s}}
 $$
 
-L is dimensionless. Increasing Kp reduces both droop and response time by 1 + L. P requires nonzero error to replace heat lost to the room. At Kp = 10 and target 30 °C, the saved baseline predicts droop 0.916 °C and τcl = 14.53 s.
+Use χh for heating and χc for cooling. For unsaturated P control, substitute u = Kp(Tset − T). At steady state:
 
-**Measured check:** for +5 PWM and Tamb = 24.220 °C, predicted Tss = 26.875 °C versus a measured final-minute mean of 26.366 °C. Warming and approximate scale agree; the 0.510 °C discrepancy exposes model/calibration limits. The same trace supplied τ, so timing agreement is not independent evidence.
+$$
+(1+\chi K_p)T_{ss}=T_{amb}+\chi K_pT_{set}\quad\Rightarrow\quad T_{set}-T_{ss}=\frac{T_{set}-T_{amb}}{1+\chi K_p}
+$$
 
-**Module 5 interpretation:** insulation lowers H and droop; doubling C slows the transient without changing the steady balance. Kp = 1 gives L = 0.5311, not much smaller than one; L = 1 at Kp = 1.883 PWM/°C. Module 5 gain 20 approximately settled at 29.386 °C (droop 0.614 °C), while higher gains showed increasingly ambiguous or recurring waves. Different ambient conditions limit quantitative cross-day comparisons.
+Subtracting the steady balance gives the decay equation and closed-loop time constant:
+
+$$
+C\frac{d(T-T_{ss})}{dt}=-(H+P_uK_p)(T-T_{ss}),\qquad\tau_{cl}=\frac{C}{H+P_uK_p}=\frac{\tau}{1+\chi K_p}
+$$
+
+**L = χKp is the dimensionless loop gain.** **Increasing Kp reduces both droop and response time by the factor 1 + L: temperature gets closer to the target and responds faster.** P still needs some error to supply heat lost to the room.
+
+**At +5 PWM and Tamb = 24.220 °C, the predicted Tss = 24.220 + 0.5311(5) = 26.875 °C, compared with a measured final-minute mean of 26.366 °C.** **The model captures warming and its approximate size, but predicts about 0.51 °C too high.** Changing ambient conditions or imperfect thermal calibration could explain the difference.
+
+Better insulation lowers H and reduces P droop; doubling C doubles response time without changing the final temperature. At Kp = 1, L = 0.5311, so the loop gain is not much smaller than one.
 
 ## 2. Experimental Goldilocks plots and metrics
 
