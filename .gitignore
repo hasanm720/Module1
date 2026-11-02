@@ -12,3 +12,6 @@ __pycache__/
 # macOS metadata
 .DS_Store
 ._*
+
+# Local agent instructions
+AGENTS.md
