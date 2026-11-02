@@ -1,0 +1,2 @@
+start_s,end_s,n_rows,tec_C_mean,rod1_C_mean,rod2_C_mean,rod3_C_mean,rod4_C_mean,rod5_C_mean,tec_C_sd,rod1_C_sd,rod2_C_sd,rod3_C_sd,rod4_C_sd,rod5_C_sd,spread_of_means_C,max_instant_spread_C,thermocouple_C,tec_minus_tc_C,hottest,coldest,passed
+0.0,40.0,41,22.409,22.68,22.68,22.595,22.74,22.68,0.003,0.0,0.0,0.007,0.028,0.0,0.331,0.37,nan,nan,T4 (A2),TEC tag T5 (A1),True
