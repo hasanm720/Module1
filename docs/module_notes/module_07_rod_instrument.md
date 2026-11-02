@@ -6,18 +6,20 @@ Fill every `___` at the bench. Units are SI unless stated.
 
 Divider on each channel: measured 100 kΩ (nominal) resistor from 5 V to the analog pin, thermistor from the pin to GND. Wiring: 26 AWG paired insulated wire with heat-shrink, 22 AWG solid pigtails at the breadboard.
 
-| Label | Arduino pin | Location | Wire colors | Measured series R (kΩ) | x (mm) | u(x) (mm) |
-|---|---|---|---|---|---|---|
-| TEC (tag T5) | A1 | TEC base (feedback + 60 °C shutdown) | ___ | ___ | — | — |
-| T1 | A5 | 41.66 mm from base (**x = 0**) | ___ | ___ | 0 | ±0.5 |
-| T2 | A4 | 67.08 mm from base | ___ | ___ | 25.42 | ±0.5 |
-| T3 | A3 | 117.74 mm from base | ___ | ___ | 76.08 | ±0.5 |
-| T4 | A2 | 167.10 mm from base | ___ | ___ | 125.44 | ±0.5 |
-| T6 | A0 | 217.73 mm from base | ___ | ___ | 176.07 | ±0.5 |
+| Wire tag | Role | Location (from rod base) | x (mm) | u(x) (mm) | Arduino pin | CSV column | Wire color | Series R (kΩ) |
+|---|---|---|---|---|---|---|---|---|
+| **T5** | TEC base: feedback + 60 °C shutdown | in the TEC base | — | — | A1 | `tec_C` | ___ | ___ |
+| **T1** | rod, lowest hole: **x = 0** (boundary value T(0,t)) | 41.66 mm | 0 | ±0.5 | A5 | `rod1_C` | ___ | ___ |
+| **T2** | rod | 67.08 mm | 25.42 | ±0.5 | A4 | `rod2_C` | ___ | ___ |
+| **T3** | rod | 117.74 mm | 76.08 | ±0.5 | A3 | `rod3_C` | ___ | ___ |
+| **T4** | rod | 167.10 mm | 125.44 | ±0.5 | A2 | `rod4_C` | ___ | ___ |
+| **T6** | rod, highest hole | 217.73 mm | 176.07 | ±0.5 | A0 | `rod5_C` | ___ | ___ |
+| — | rod tip | ≈300 mm | L = 258.3 | ±2 | — | — | — | — |
 
-Wire tags: the TEC thermistor is tagged **T5**; rod sensors are tagged T1 (lowest hole) … T4, **T6** (highest hole). CSV `rod5_C` = tag T6.
-
-Coordinate: x = 0 at the first thermistor hole (T1), positive toward the free tip. The tip is at x = L. Base = rod end at the TEC. Positions were measured with calipers (T4 measured from T1 and T5 from T2, then converted). u(x) = ±0.5 mm for locating the hole center (estimate). T3→T4 = 49.36 mm, 1.4 mm short of the nominal 2 in; worth re-checking.
+- **Coordinate:** x = 0 at the T1 hole, positive toward the free tip; the tip is at x = L. The base is the rod end at the TEC.
+- **Tags vs columns:** there is no rod "T5". Tag T5 is the TEC thermistor, so CSV `rod5_C` holds tag **T6**.
+- **Positions:** hole centers measured with calipers. T4 was measured from T1 and T6 from T2, then converted to x. u(x) = ±0.5 mm is the estimated error in locating a hole center.
+- **Check:** T3→T4 = 49.36 mm, 1.4 mm short of the nominal 2 in. Worth re-measuring.
 
 Photo/diagram showing labels, pins, the x direction and the positions: `docs/figures/module_07/___`
 
