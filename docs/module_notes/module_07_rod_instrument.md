@@ -58,3 +58,32 @@ Raw CSV: `data/module_07/rod_raw_common_bath_room_20261102_094019.csv`. Analysis
 Conclusion: All six channels agree within 0.45 °C (< 1 °C) at room temperature (Nov 2, 2026). The instructor approved a room-temperature check instead of a hot bath. Raw readings are used; no correction is applied. (If every spread is < 1 °C, the raw readings are used and no correction is applied. Otherwise continue to the Record/Pause calibration.)
 
 Notes (noisy channel, connection fixed, bath handling): ___
+
+## 5. Prediction record (before heating, Nov 2, 2026)
+
+Inputs: d = 12.705 mm, L = 258.3 mm, provisional h = 10 W m⁻² K⁻¹ (still air), k = 150–170 W m⁻¹ K⁻¹ (6061-T6 literature range).
+
+| | k = 150 | k = 170 |
+|---|---|---|
+| m = √(4h/(kd)) (1/m) | 4.58 | 4.30 |
+| Decay length 1/m (cm) | 21.8 | 23.2 |
+| mL | 1.18 | 1.11 |
+| Bi⊥ = hd/(4k) | 2.1 × 10⁻⁴ | 1.9 × 10⁻⁴ |
+| θ(T5)/θ(T1), finite model | 0.60 | 0.63 |
+
+ε_T(x) = |Θ_finite − Θ_inf| / |Θ_finite| at each sensor (both k give about the same):
+
+| Sensor | T1 | T2 | T3 | T4 | T5 |
+|---|---|---|---|---|---|
+| x (mm) | 0 | 25.42 | 76.08 | 125.44 | 176.07 |
+| ε_T (%) | 0 | 2.2 | 8.0–8.3 | 15.6–16.0 | 25.6–25.8 |
+
+- Radius: Bi⊥ ≪ 0.1, so one temperature per cross-section is fine.
+- Length: ε_T > 5% from T3 on, so the rod is **not** semi-infinite over the measured region; the finite tip should be visible.
+- With h = 10, θ5 ≈ 0.6 θ1, which does not reach the placement target θ5 ≤ θ1/e ≈ 0.37. The placement pilot will test this.
+
+Qualitative predictions:
+1. Response order after a base step: T1 → T2 → T3 → T4 → T5 (nearest the TEC first).
+2. Amplitude: the temperature rise shrinks with distance from the base.
+3. Stationary profile: a monotonic decay from T1, flattening toward the tip (cosh shape, zero slope at the insulated tip).
+4. Finite tip: yes, it should be visible (mL ≈ 1.1–1.2).
