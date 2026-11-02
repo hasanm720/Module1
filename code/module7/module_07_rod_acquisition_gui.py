@@ -371,6 +371,8 @@ if __name__ == '__main__':
     parser.add_argument('--ki', type=float, help='Preset Ki (PWM/°C/s)')
     parser.add_argument('--window', type=int, help='Preset plot window (s)')
     parser.add_argument('--start', action='store_true', help='Start control on the first safe measurement')
+    parser.add_argument('--step-after', type=float, help='Seconds after launch to change the setpoint')
+    parser.add_argument('--step-to', type=float, help='New setpoint (°C) for --step-after')
     args = parser.parse_args()
     app = QtWidgets.QApplication(sys.argv)
     gui = RodAcquisitionGUI(args.port, args.label)
@@ -381,5 +383,12 @@ if __name__ == '__main__':
     if args.ki is not None: gui.ki.setValue(args.ki)
     if args.window: gui.window.setValue(args.window)
     gui.autostart = args.start
+    if args.step_after is not None and args.step_to is not None:
+        # A setpoint change keeps control running (only Kp/Ki/limit changes stop it).
+        def step():
+            gui.setpoint.setValue(args.step_to)
+            print(f'Setpoint stepped to {args.step_to} °C at Arduino t = '
+                  f'{gui.sample.time if gui.sample else float("nan"):.1f} s', flush=True)
+        QtCore.QTimer.singleShot(int(args.step_after * 1000), step)
     gui.show()
     sys.exit(app.exec())
