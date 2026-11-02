@@ -35,6 +35,7 @@ COLORS = ['k', '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 SAFETY_STATES = ('OK', 'SHUTDOWN', 'SENSOR_FAULT', 'TIMEOUT')
 LIMIT_C = 60.0  # TEMPERATURE_LIMIT_C in the sketch; not transmitted in DATA.
 SPREAD_PASS_C = 1.0  # Common-bath default criterion: T_max - T_min < 1 °C.
+MAX_DT_S = 5.0  # Largest Arduino-time step between handled records before control stops.
 
 
 @dataclass(frozen=True)
@@ -248,11 +249,6 @@ class RodAcquisitionGUI(PControlGUI):
     # ---------- serial ----------
     def update_loop(self):
         now = time.monotonic()
-        if self.last_received is not None and now - self.last_received > STALE_SECONDS:
-            if self.enabled:
-                self.stop_control('Telemetry timed out — stopped; press Start after recovery')
-            else:
-                self.status.setText('No fresh telemetry — check Arduino connection')
         if not self.ser or not self.ser.is_open:
             return
         try:
@@ -283,6 +279,14 @@ class RodAcquisitionGUI(PControlGUI):
             # Control acts on the newest measurement only (never replays a stale burst).
             if newest:
                 self.handle_sample(newest, now)
+            # Stale only if nothing new arrived. Checked after reading, so a brief GUI
+            # pause (e.g. macOS App Nap) with data waiting in the buffer is not a timeout.
+            # The Arduino's own 2 s command timeout still zeroes the TEC if the GUI freezes.
+            elif self.last_received is not None and now - self.last_received > STALE_SECONDS:
+                if self.enabled:
+                    self.stop_control('Telemetry timed out — stopped; press Start after recovery')
+                else:
+                    self.status.setText('No fresh telemetry — check Arduino connection')
         except (OSError, serial.SerialException) as error:
             self.stop_control(f'Serial connection failed: {error}')
             self.ser.close()
@@ -299,7 +303,8 @@ class RodAcquisitionGUI(PControlGUI):
 
     def handle_sample(self, sample, now):
         dt = 0 if self.previous_time is None else sample.time - self.previous_time
-        if self.previous_time is not None and not 0 < dt <= STALE_SECONDS:
+        # dt <= 0 means the Arduino restarted. Up to MAX_DT_S allows skipped buffered records.
+        if self.previous_time is not None and not 0 < dt <= MAX_DT_S:
             self.stop_control('Invalid sample interval (Arduino restarted?) — stopped')
         self.previous_time = sample.time
         self.sample, self.last_received = sample, now
