@@ -6,7 +6,7 @@ module_07_rod_controller.ino, close Serial Monitor, then run:
     python module_07_rod_acquisition_gui.py [--port /dev/cu.usbmodem...] [--label common_bath]
 
 Only the TEC thermistor (A1) enters the PI law. Rod channels are measured and logged;
-the sketch reports them in physical order T1..T5 (pins A5, A4, A3, A2, A0).
+the sketch reports them in physical order T1, T2, T3, T4, T6 (pins A5, A4, A3, A2, A0).
 Every accepted DATA record is written, raw and uncalibrated, to a NEW CSV in
 data/module_07/ whether or not control is running.
 """
@@ -30,7 +30,7 @@ from pi_logic import PIController
 HEADER = 'DATA,time_s,tec_C,rod1_C,rod2_C,rod3_C,rod4_C,rod5_C,pwm,heat_cool,setpoint_C,safety'
 FIELDS = HEADER.split(',')[1:]
 CHANNELS = ['tec_C', 'rod1_C', 'rod2_C', 'rod3_C', 'rod4_C', 'rod5_C']
-LABELS = ['TEC (A1)', 'T1 (A5)', 'T2 (A4)', 'T3 (A3)', 'T4 (A2)', 'T5 (A0)']
+LABELS = ['TEC tag T5 (A1)', 'T1 (A5)', 'T2 (A4)', 'T3 (A3)', 'T4 (A2)', 'T6 (A0)']  # physical wire tags; CSV column rod5_C = tag T6
 COLORS = ['k', '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 SAFETY_STATES = ('OK', 'SHUTDOWN', 'SENSOR_FAULT', 'TIMEOUT')
 LIMIT_C = 60.0  # TEMPERATURE_LIMIT_C in the sketch; not transmitted in DATA.

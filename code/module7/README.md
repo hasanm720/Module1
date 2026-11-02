@@ -4,8 +4,10 @@ Open [module_07_rod_controller.ino](module_07_rod_controller/module_07_rod_contr
 
 | Input | Sensor |
 |---|---|
-| A1 | TEC-base thermistor; sole feedback and temperature-shutdown sensor |
-| A5, A4, A3, A2, A0 | Rod thermistors T1 (nearest TEC) … T5; measurements only |
+| A1 | TEC-base thermistor (wire tag **T5**); sole feedback and temperature-shutdown sensor |
+| A5, A4, A3, A2, A0 | Rod thermistors tagged T1 (lowest hole, nearest TEC), T2, T3, T4, **T6** (highest hole); measurements only |
+
+CSV columns `rod1_C … rod5_C` are the rod sensors in hole order, so `rod5_C` is tag **T6**.
 
 The pins follow the bench wiring rather than the lab page's A0–A5 order. `THERMISTOR_PINS` = `{A1, A5, A4, A3, A2, A0}`, so the DATA/CSV columns are always TEC, rod1 … rod5 in physical order.
 

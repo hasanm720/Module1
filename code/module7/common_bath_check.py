@@ -23,7 +23,7 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
 CHANNELS = ['tec_C', 'rod1_C', 'rod2_C', 'rod3_C', 'rod4_C', 'rod5_C']
-LABELS = ['TEC (A1)', 'T1 (A5)', 'T2 (A4)', 'T3 (A3)', 'T4 (A2)', 'T5 (A0)']
+LABELS = ['TEC tag T5 (A1)', 'T1 (A5)', 'T2 (A4)', 'T3 (A3)', 'T4 (A2)', 'T6 (A0)']  # physical wire tags; CSV column rod5_C = tag T6
 COLORS = ['k', '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 SPREAD_PASS_C = 1.0
 
