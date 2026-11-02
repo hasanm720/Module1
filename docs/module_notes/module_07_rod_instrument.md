@@ -120,41 +120,34 @@ Raw CSV: `data/module_07/rod_raw_main_step_20to45_20261102_113833.csv`. PI (Kp =
 
 - **Baseline deviation:** the rod was not fully equilibrated at 20 °C. Rod channels were 18.6–21.3 °C and still cooling about 0.06–0.12 °C/min when the step started; the user judged it close enough.
 
-**Bench measurements during the run** (by the user, about 11:55, ~15 min after the step; method ___):
+**Note only, not used in any analysis:** at about 11:55 (~15 min after the step), a multimeter thermal probe read room ≈ **25 °C** and rod tip ≈ **28 °C**. At the same time T6 (x = 200.95 mm) logged 31.9 °C. These hand readings are kept as observations; the fits use only the five logged rod thermistors.
 
-| Quantity | Value |
-|---|---|
-| Room temperature | **25 °C** |
-| Rod tip temperature (x ≈ L = 283 mm) | **28 °C** |
-| T6 at the same time (x = 200.95 mm) | 31.9 °C (from the log) |
-
-- The tip is 3 °C above room, so the end of the rod is still losing heat. This is evidence for the tip boundary condition (Phase 5, Step 8), and consistent with the decay continuing past T6.
-- **Room temperature correction:** the pilot (section 6) assumed T_room = 23.5 °C. With 25 °C, the pilot ratio becomes θ(T6)/θ(T1) = (29.99 − 25)/(39.96 − 25) = **0.33**, which meets the ≤ 1/e = 0.37 placement target. Use the measured room temperature in Phase 5.
 - **Run ended early, with the instructor's approval** (about 18 min after the step, t = 1095 s): "life is short", so we did not wait for steady state. The final interval does **not** meet the |dT/dt| < 0.02 °C/min criterion; the analysis below uses this run's data as is.
 
 ## 8. Profile fits (Phase 5) on the final interval of the main run
 
-Window: last 120 s (t = 975–1095 s). Room 25 ± 0.5 °C. Code: `code/module7/stationary_fit.py`. Figure: `docs/figures/module_07/rod_raw_main_step_20to45_20261102_113833_fin_fits.png`. Numbers: `..._fin_fits.json`.
+Window: last 120 s (t = 975–1095 s). Data: the five rod thermistors only. **T_room is a fitted parameter**; the probe readings in section 7 are not used. Code: `code/module7/stationary_fit.py`. Figure: `docs/figures/module_07/rod_raw_main_step_20to45_20261102_113833_fin_fits.png`. Numbers: `..._fin_fits.json`.
 
-| Sensor | x (mm) | T (°C) | θ (°C) | Drift (°C/min) | ε_T with fitted m (%) |
-|---|---|---|---|---|---|
-| T1 | 0 | 39.99 | 14.99 | +0.017 | 0 |
-| T2 | 50.30 | 37.07 | 12.07 | +0.066 | 3.3 |
-| T3 | 100.96 | 34.63 | 9.63 | +0.130 | 8.5 |
-| T4 | 150.32 | 33.21 | 8.21 | +0.161 | 15.8 |
-| T6 | 200.95 | 32.07 | 7.07 | +0.170 | 26.1 |
-
-| Model | m (m⁻¹) | 1/m (cm) | mL | RMS residual (°C) |
+| Sensor | x (mm) | T (°C) | Drift (°C/min) | ε_T with fitted m (%) |
 |---|---|---|---|---|
-| Finite (insulated tip) | **5.22 ± 0.05 (fit) ± 0.16 (room)** | 19.1 | 1.48 | 0.07 |
-| Semi-infinite | 3.91 ± 0.20 (fit) ± 0.19 (room) | 25.6 | 1.11 | 0.23 |
+| T1 | 0 | 39.99 | +0.017 | 0 |
+| T2 | 50.30 | 37.07 | +0.066 | 4.0 |
+| T3 | 100.96 | 34.63 | +0.130 | 9.8 |
+| T4 | 150.32 | 33.21 | +0.161 | 17.3 |
+| T6 | 200.95 | 32.07 | +0.170 | 27.1 |
 
-- **Ignoring the tip shifts m by −1.31 m⁻¹,** about 8× the finite-fit uncertainty (0.17 m⁻¹). The semi-infinite residuals show a clear systematic arc; the finite residuals scatter about zero. The finite model is more adequate, consistent with ε_T > 5% from T3 on.
-- **Bi⊥ = (md/4)² = 2.8 × 10⁻⁴ ± 0.2 × 10⁻⁴** ≪ 0.1, so the rod is one-dimensional across its radius.
-- **Tip check:** measured θ_tip ≈ 3 °C (hand measurement at about 15 min) vs the finite-model prediction of 6.5 °C. The tip is cooler than an insulated tip, which suggests end loss. Caveats: the measurement was earlier and its method is not recorded.
-- **Not stationary:** the far sensors were still rising 0.13–0.17 °C/min, so the far end of the profile is low compared with the true steady state. That biases m high. This is the dominant limitation of this result.
-- **Compared with the prediction record:**
-  - The response order T1 → T6 and the shrinking amplitude were confirmed.
-  - A finite tip effect is visible.
-  - m = 5.2 m⁻¹ is larger than the predicted 4.3–4.6 m⁻¹ (h = 10, k = 150–170), which implies an effective h of about 13–15 W m⁻² K⁻¹ (hP/(kA) = m²).
-  - m alone cannot separate k from h, because only the ratio h/k enters m² = 4h/(kd).
+Models: T(x) = T_room + θ0·f(x), with f = cosh(m(L − x))/cosh(mL) (finite, insulated tip) or exp(−mx) (semi-infinite). There are 3 parameters and 5 points.
+
+| Model | m (m⁻¹) | 1/m (cm) | mL | Fitted T_room (°C) | RMS residual (°C) |
+|---|---|---|---|---|---|
+| Finite (insulated tip) | **4.4 ± 1.2** | 22.5 | 1.26 | 21.9 | 0.064 |
+| Semi-infinite | 6.6 ± 0.7 | 15.1 | 1.87 | 29.2 | 0.075 |
+
+- **Ignoring the tip shifts m by +2.2 m⁻¹,** about 1.9× the finite-fit uncertainty (1.2 m⁻¹).
+- **The models can't be told apart by residuals alone** (0.064 vs 0.075 °C; with 2 degrees of freedom both residual sets look random). The fitted T_room separates them: the semi-infinite fit needs T_room = 29 °C, which is **above** the far-end rod temperature trend and is not physical, so the finite model is more adequate. The finite model's T_room = 21.9 °C is plausible.
+- **Finite m vs prediction:** 4.4 ± 1.2 m⁻¹ agrees with the predicted 4.3–4.6 m⁻¹ (h = 10, k = 150–170). The large uncertainty comes from fitting T_room as well.
+- **Bi⊥ = (md/4)² = (2.0 ± 1.0) × 10⁻⁴** ≪ 0.1, so the rod is one-dimensional across its radius.
+- **ε_T** exceeds 5% from T3 on, so the semi-infinite approximation fails over the measured region.
+- **Not stationary (dominant limitation):** the far sensors were still rising 0.13–0.17 °C/min, so the profile is a late transient, not steady. This biases both m and the fitted T_room.
+- **Compared with the prediction record:** the response order T1 → T6 and the shrinking amplitude were confirmed, and the finite-tip effect is supported (via physical T_room). m alone cannot separate k from h, because only h/k enters m² = 4h/(kd).
+- **Superseded:** an earlier version of this section fixed T_room = 25 °C from the probe (finite m = 5.22 m⁻¹). It was replaced because the probe readings are notes only.

@@ -4,7 +4,6 @@
     975.212,
     1095.212
   ],
-  "room_C": 25.0,
   "x_m": [
     0.0,
     0.0503,
@@ -26,13 +25,6 @@
     0.094,
     0.1
   ],
-  "theta_C": [
-    14.992,
-    12.07,
-    9.627,
-    8.214,
-    7.074
-  ],
   "drift_C_per_min": [
     0.017,
     0.066,
@@ -42,52 +34,53 @@
   ],
   "L_m": 0.2832,
   "d_m": 0.012705,
+  "note": "T_room is fitted; hand-held probe readings (room 25 C, tip 28 C) are notes only.",
   "finite": {
-    "m_per_m": 5.222,
-    "u_fit": 0.052,
-    "u_room_sys": 0.163,
-    "theta0_C": 15.041,
-    "decay_length_m": 0.1915,
-    "mL": 1.479,
+    "m_per_m": 4.436,
+    "u_m": 1.147,
+    "T_room_fit_C": 21.91,
+    "u_T_room_fixed_m": 0.22,
+    "theta0_C": 18.095,
+    "decay_length_m": 0.2254,
+    "mL": 1.256,
     "residuals_C": [
-      -0.049,
-      0.108,
-      -0.071,
-      0.064,
-      -0.054
+      -0.017,
+      0.07,
+      -0.106,
+      0.065,
+      -0.012
     ],
-    "rms_residual_C": 0.072
+    "rms_residual_C": 0.064,
+    "m_at_grid_edge": false
   },
   "semi-infinite": {
-    "m_per_m": 3.909,
-    "u_fit": 0.195,
-    "u_room_sys": 0.193,
-    "theta0_C": 14.811,
-    "decay_length_m": 0.2558,
-    "mL": 1.107,
+    "m_per_m": 6.616,
+    "u_m": 0.674,
+    "T_room_fit_C": 29.19,
+    "u_T_room_fixed_m": 0.13,
+    "theta0_C": 10.838,
+    "decay_length_m": 0.1512,
+    "mL": 1.874,
     "residuals_C": [
-      0.181,
-      -0.097,
-      -0.355,
-      -0.016,
-      0.322
+      -0.032,
+      0.113,
+      -0.118,
+      0.018,
+      0.019
     ],
-    "rms_residual_C": 0.233
+    "rms_residual_C": 0.075,
+    "m_at_grid_edge": false
   },
-  "shift_semi_minus_finite": -1.313,
+  "shift_semi_minus_finite": 2.18,
   "Bi_perp": [
-    0.0002751079185725062,
-    1.8027264698996607e-05
+    0.00019852373212402496,
+    0.00010266308419578748
   ],
   "epsilon_T_percent": [
     0.0,
-    3.3,
-    8.5,
-    15.8,
-    26.1
-  ],
-  "tip": {
-    "measured_theta_C": 3.0,
-    "finite_model_theta_C": 6.52
-  }
+    4.0,
+    9.8,
+    17.3,
+    27.1
+  ]
 }
