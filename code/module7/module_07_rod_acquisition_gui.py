@@ -305,6 +305,10 @@ class RodAcquisitionGUI(PControlGUI):
         self.sample, self.last_received = sample, now
         if sample.safety != 'OK':
             self.stop_control(f'Arduino {sample.safety}')
+        # --start: begin control once, on the first safe measurement.
+        if getattr(self, 'autostart', False) and sample.safety == 'OK' and not self.enabled:
+            self.autostart = False
+            self.start_control()
         target, kp = self.setpoint.value(), self.kp.value()
         ki = self.ki.value() if self.mode.currentText() == 'PI' else 0
         error, p, i, requested, applied = math.nan, 0, 0, 0, 0
@@ -354,8 +358,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--port', help='Explicit serial device; otherwise auto-detect USB')
     parser.add_argument('--label', help='Optional tag in the CSV filename, e.g. common_bath')
+    parser.add_argument('--mode', choices=['P-only', 'PI'], help='Preset controller mode')
+    parser.add_argument('--setpoint', type=float, help='Preset setpoint (°C, 10–45)')
+    parser.add_argument('--kp', type=float, help='Preset Kp (PWM/°C)')
+    parser.add_argument('--ki', type=float, help='Preset Ki (PWM/°C/s)')
+    parser.add_argument('--window', type=int, help='Preset plot window (s)')
+    parser.add_argument('--start', action='store_true', help='Start control on the first safe measurement')
     args = parser.parse_args()
     app = QtWidgets.QApplication(sys.argv)
     gui = RodAcquisitionGUI(args.port, args.label)
+    # Mode first: changing it resets the controller. Every change leaves output stopped.
+    if args.mode: gui.mode.setCurrentText(args.mode)
+    if args.setpoint is not None: gui.setpoint.setValue(args.setpoint)
+    if args.kp is not None: gui.kp.setValue(args.kp)
+    if args.ki is not None: gui.ki.setValue(args.ki)
+    if args.window: gui.window.setValue(args.window)
+    gui.autostart = args.start
     gui.show()
     sys.exit(app.exec())
