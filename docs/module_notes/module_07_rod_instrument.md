@@ -113,3 +113,20 @@ TEC held at 45 °C by PI (Kp = 16, Ki = 0.5) for about 11 min, with the sensors 
 - **Semilog spacing:** the five points are evenly spread and well separated in ln θ, so no position is indistinguishable from noise.
 - A small dip on all channels at t ≈ 470 s is a brief disturbance (air or touch), not a sensor fault.
 - **Files:** `data/module_07/rod_raw_pilot_45C_run3_20261102_110341.csv` and `docs/figures/module_07/rod_raw_pilot_45C_run3_20261102_110341_pilot.png`. Earlier attempts (`..._pilot_45C_*`, `..._run2_*`) failed because of a loose TEC contact and GUI stops.
+
+## 7. Main run: 20 → 45 °C step (Phase 4, Steps 5–9; Nov 2, 2026)
+
+Raw CSV: `data/module_07/rod_raw_main_step_20to45_20261102_113833.csv`. PI (Kp = 16, Ki = 0.5) held 20 °C for 90 s, then stepped to 45 °C.
+
+- **Baseline deviation:** the rod was not fully equilibrated at 20 °C. Rod channels were 18.6–21.3 °C and still cooling about 0.06–0.12 °C/min when the step started; the user judged it close enough.
+
+**Bench measurements during the run** (by the user, about 11:55, ~15 min after the step; method ___):
+
+| Quantity | Value |
+|---|---|
+| Room temperature | **25 °C** |
+| Rod tip temperature (x ≈ L = 283 mm) | **28 °C** |
+| T6 at the same time (x = 200.95 mm) | 31.9 °C (from the log) |
+
+- The tip is 3 °C above room, so the end of the rod is still losing heat. This is evidence for the tip boundary condition (Phase 5, Step 8), and consistent with the decay continuing past T6.
+- **Room temperature correction:** the pilot (section 6) assumed T_room = 23.5 °C. With 25 °C, the pilot ratio becomes θ(T6)/θ(T1) = (29.99 − 25)/(39.96 − 25) = **0.33**, which meets the ≤ 1/e = 0.37 placement target. Use the measured room temperature in Phase 5.
