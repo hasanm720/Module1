@@ -305,8 +305,10 @@ class RodAcquisitionGUI(PControlGUI):
         self.sample, self.last_received = sample, now
         if sample.safety != 'OK':
             self.stop_control(f'Arduino {sample.safety}')
-        # --start: begin control once, on the first safe measurement.
-        if getattr(self, 'autostart', False) and sample.safety == 'OK' and not self.enabled:
+        # --start: begin control once, after the window has settled (5 records, ~3 s),
+        # so a slow first draw cannot trip the stale-telemetry stop.
+        if (getattr(self, 'autostart', False) and self.accepted >= 5
+                and sample.safety == 'OK' and not self.enabled):
             self.autostart = False
             self.start_control()
         target, kp = self.setpoint.value(), self.kp.value()
