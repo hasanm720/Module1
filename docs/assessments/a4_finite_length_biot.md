@@ -1,7 +1,7 @@
 # A4 — Finite Length and Biot Number for the Course Rod
 
 PHYS 39 · Module 7 · **Kyle Chen** (individual) · Assignment A4 · November 2, 2026
-Repository: [https://github.com/hasanm720/Module1](https://github.com/hasanm720/Module1) (branch mainv2) · Git commit: **4a9c152cdbb2bc878d431567cdc4e4b2a0cbe184**
+Repository: [https://github.com/hasanm720/Module1](https://github.com/hasanm720/Module1) (branch mainv2) · Git commit: **eee610fea41064f91ada01cb2564f00931145fc7**
 
 Inputs are the measured rod geometry and sensor positions recorded before heating (docs/module_notes/module_07_rod_instrument.md), a literature range for k, and the provisional still-air coefficient h = 10 W m^−2 K^−1. All values below are predictions; A4 does not use the Part III temperature-profile data.
 
