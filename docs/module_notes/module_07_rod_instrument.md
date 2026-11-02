@@ -93,3 +93,23 @@ Qualitative predictions:
 2. Amplitude: the temperature rise shrinks with distance from the base.
 3. Stationary profile: a monotonic decay from T1, flattening toward the tip (cosh shape, zero slope at the insulated tip).
 4. Finite tip: yes, it should be visible (mL ≈ 1.2–1.3).
+
+## 6. Placement pilot (Phase 4, Steps 2–3; Nov 2, 2026)
+
+TEC held at 45 °C by PI (Kp = 16, Ki = 0.5) for about 11 min, with the sensors in the holes from section 1. Room was 23.5 ± 0.5 °C (mean of the rod channels just before heating). Averages are over the last 120 s.
+
+| Sensor | x (mm) | T (°C) | θ = T − T_room (°C) | θ/θ(T1) | Drift (°C/min) |
+|---|---|---|---|---|---|
+| TEC (T5) | — | 44.99 | — | — | −0.016 |
+| T1 | 0 | 39.96 | 16.46 | 1.000 | −0.031 |
+| T2 | 50.30 | 36.17 | 12.67 | 0.770 | −0.011 |
+| T3 | 100.96 | 33.14 | 9.64 | 0.585 | +0.018 |
+| T4 | 150.32 | 31.36 | 7.86 | 0.477 | +0.047 |
+| T6 | 200.95 | 29.99 | 6.49 | **0.394** | +0.066 |
+
+- **Placement criterion θ(T6) ≤ θ(T1)/e = 0.368: not met, but close (0.39).** T6 is already in the highest hole, so the holes are kept. A ±0.5 °C error in room temperature moves the ratio between 0.36 and 0.43.
+- **Compared with the prediction:** the measured decay is stronger than predicted (0.39 vs 0.55–0.58). The rough semilog slope gives m ≈ 4.7 m⁻¹, which suggests h is larger than the provisional 10 W m⁻² K⁻¹.
+- **Not fully stationary:** T4 and T6 were still rising (+0.05 to +0.07 °C/min, above the 0.02 °C/min criterion), so the final ratio will be slightly higher. The stationary run (Phase 4, Steps 5–9) settles this.
+- **Semilog spacing:** the five points are evenly spread and well separated in ln θ, so no position is indistinguishable from noise.
+- A small dip on all channels at t ≈ 470 s is a brief disturbance (air or touch), not a sensor fault.
+- **Files:** `data/module_07/rod_raw_pilot_45C_run3_20261102_110341.csv` and `docs/figures/module_07/rod_raw_pilot_45C_run3_20261102_110341_pilot.png`. Earlier attempts (`..._pilot_45C_*`, `..._run2_*`) failed because of a loose TEC contact and GUI stops.
