@@ -22,4 +22,4 @@ Positions from Module 7 section 1; sensors not moved for Module 8 (spacing judge
 
 | Date | File | Mode | Ta / Tb (°C) | Period (s) | Kp / Ki | Room (°C) | Notes |
 |---|---|---|---|---|---|---|---|
-| ___ | ___ | ___ | ___ | ___ | ___ | ___ | ___ |
+| Nov 4 | (pending) | OPEN | 40 / 16 | 100 | — | 26 | first trial, room temperature recorded before start |
