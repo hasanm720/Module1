@@ -39,5 +39,5 @@ Fit: last 5 cycles, t = 1305–1804 s (`code/module8/fit_sinusoids.py`). Figure 
 
 - **Preliminary, T1–T3 only:** q = 20.7 m⁻¹, q′ = 20.2 rad/m, κ = 7.5 × 10⁻⁵ m²/s, ν = 1.35 × 10⁻³ s⁻¹. Planning values: κ = 6.90 × 10⁻⁵, ν = 1.30 × 10⁻³. No uncertainties yet.
 - **Boundary tracking is poor in open loop:** requested ±16 °C about 40 °C; the TEC gave ±3.6 °C about 44.6 °C.
-- **T4 and T6 are at or below noise** at this period (B/sd ≈ 1 and 0.2), so they are not usable here.
+- **T4 looks usable, T6 does not, at this period.** Extending the T1–T3 line to T4 predicts B = 0.052 °C and φ = −6.93 rad; T4 measured 0.049 °C and −6.76 rad. Its low B/sd comes mostly from leftover slow drift, not random noise. For T6 the line predicts 0.018 °C and −7.96 rad; it measured 0.007 °C and −7.24 rad, so its signal is too small.
 - **Not fully settled:** means still drifted +0.05 to +0.09 °C/min.
