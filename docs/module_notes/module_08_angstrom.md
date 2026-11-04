@@ -23,6 +23,7 @@ Positions from Module 7 section 1; sensors not moved for Module 8 (spacing judge
 | Date | File | Mode | Ta / Tb (°C) | Period (s) | Kp / Ki | Room (°C) | Notes |
 |---|---|---|---|---|---|---|---|
 | Nov 4 | `angstrom_raw_open_40_16_100_20261104_094810.csv` | OPEN | 40 / 16 | 100 | — | 26 | ran the full 1800 s, ended DONE, no faults |
+| Nov 4 | `angstrom_raw_P_40_16_100_20261104_102713.csv` | P | 40 / 16 | 100 | 16 / 0 | 26 (not re-read) | 600 s, ended DONE, no faults. Separate file from the open-loop trial because the GUI was relaunched |
 
 ## Trial 1: open loop, 40 ± 16 °C, 100 s (Nov 4)
 
@@ -41,3 +42,19 @@ Fit: last 5 cycles, t = 1305–1804 s (`code/module8/fit_sinusoids.py`). Figure 
 - **Boundary tracking is poor in open loop:** requested ±16 °C about 40 °C; the TEC gave ±3.6 °C about 44.6 °C.
 - **T4 looks usable, T6 does not, at this period.** Extending the T1–T3 line to T4 predicts B = 0.052 °C and φ = −6.93 rad; T4 measured 0.049 °C and −6.76 rad. Its low B/sd comes mostly from leftover slow drift, not random noise. For T6 the line predicts 0.018 °C and −7.96 rad; it measured 0.007 °C and −7.24 rad, so its signal is too small.
 - **Not fully settled:** means still drifted +0.05 to +0.09 °C/min.
+
+## Trial 2: P-only, Kp = 16, 40 ± 16 °C, 100 s (Nov 4)
+
+Fit: 5 cycles, t = 105–605 s. Figure and numbers: `docs/figures/module_08/angstrom_raw_P_40_16_100_20261104_102713_fit_100s.*`.
+
+| Sensor | Mean (°C) | Drift (°C/min) | B (°C) | φ (rad) |
+|---|---|---|---|---|
+| TEC | 38.48 | +0.021 | 12.763 | −2.25 |
+| T1 | 36.00 | +0.109 | 4.251 | −3.03 |
+| T2 | 34.13 | +0.163 | 1.466 | −4.04 |
+| T3 | 32.57 | +0.195 | 0.502 | −5.06 |
+| T4 | 31.92 | +0.208 | 0.164 | −6.03 |
+| T6 | 31.12 | +0.208 | 0.051 | −7.19 |
+
+- **Preliminary, T1–T4:** q = 21.6 m⁻¹, q′ = 20.0 rad/m, κ = 7.3 × 10⁻⁵ m²/s, ν = 4.8 × 10⁻³ s⁻¹. κ agrees with trial 1 (7.5 × 10⁻⁵). ν does not (1.35 × 10⁻³). ν depends on the small difference q² − q′², so it is very sensitive, and this run was still warming.
+- **Tracking:** TEC ±12.8 °C about 38.5 °C. RMS error from the setpoint 4.7 °C, max 8.2 °C. The TEC lags the setpoint by about 0.68 rad (11 s). PWM −207 to +130, never clipped.
