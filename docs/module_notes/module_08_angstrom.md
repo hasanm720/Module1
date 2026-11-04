@@ -24,6 +24,7 @@ Positions from Module 7 section 1; sensors not moved for Module 8 (spacing judge
 |---|---|---|---|---|---|---|---|
 | Nov 4 | `angstrom_raw_open_40_16_100_20261104_094810.csv` | OPEN | 40 / 16 | 100 | — | 26 | ran the full 1800 s, ended DONE, no faults |
 | Nov 4 | `angstrom_raw_P_40_16_100_20261104_102713.csv` | P | 40 / 16 | 100 | 16 / 0 | 26 (not re-read) | 600 s, ended DONE, no faults. Separate file from the open-loop trial because the GUI was relaunched |
+| Nov 4 | `angstrom_raw_PI_40_16_100_20261104_105054.csv` | PI | 40 / 16 | 100 | 16 / 0.5 | 26 (not re-read) | 600 s, ended DONE, no faults |
 
 ## Trial 1: open loop, 40 ± 16 °C, 100 s (Nov 4)
 
@@ -58,3 +59,35 @@ Fit: 5 cycles, t = 105–605 s. Figure and numbers: `docs/figures/module_08/angs
 
 - **Preliminary, T1–T4:** q = 21.6 m⁻¹, q′ = 20.0 rad/m, κ = 7.3 × 10⁻⁵ m²/s, ν = 4.8 × 10⁻³ s⁻¹. κ agrees with trial 1 (7.5 × 10⁻⁵). ν does not (1.35 × 10⁻³). ν depends on the small difference q² − q′², so it is very sensitive, and this run was still warming.
 - **Tracking:** TEC ±12.8 °C about 38.5 °C. RMS error from the setpoint 4.7 °C, max 8.2 °C. The TEC lags the setpoint by about 0.68 rad (11 s). PWM −207 to +130, never clipped.
+
+## Trial 3: PI, Kp = 16, Ki = 0.5, 40 ± 16 °C, 100 s (Nov 4)
+
+Fit: 5 cycles, t = 104–604 s. Figure and numbers: `docs/figures/module_08/angstrom_raw_PI_40_16_100_20261104_105054_fit_100s.*`.
+
+| Sensor | Mean (°C) | Drift (°C/min) | B (°C) | φ (rad) |
+|---|---|---|---|---|
+| TEC | 40.01 | +0.003 | 15.343 | −2.30 |
+| T1 | 36.99 | +0.154 | 5.150 | −3.07 |
+| T2 | 34.73 | +0.255 | 1.777 | −4.09 |
+| T3 | 32.86 | +0.320 | 0.606 | −5.11 |
+| T4 | 32.00 | +0.356 | 0.197 | −6.08 |
+| T6 | 31.04 | +0.368 | 0.057 | −7.27 |
+
+Preliminary, T1–T4: q = 21.65 m⁻¹, q′ = 20.01 rad/m, κ = 7.25 × 10⁻⁵ m²/s, ν = 4.96 × 10⁻³ s⁻¹. Not settled: rod means still rising 0.15–0.37 °C/min.
+
+## Step 7: comparison of control modes (40 ± 16 °C, 100 s, last 500 s of each run)
+
+| | Open loop | P (Kp 16) | PI (16, 0.5) |
+|---|---|---|---|
+| TEC mean (target 40 °C) | 44.59 | 38.48 | **40.01** |
+| TEC amplitude (target 16 °C) | 3.58 | 12.76 | **15.34** |
+| TEC phase lag behind setpoint (rad) | 1.55 | 0.68 | 0.73 |
+| RMS / max tracking error (°C) | 11.8 / 19.9 | 4.7 / 8.2 | 4.8 / **6.9** |
+| TEC peak high / low (°C) | 48.2 / 40.9 | 51.4 / 25.8 | 55.6 / 24.9 |
+| 2nd harmonic / fundamental, TEC | 0.004 | 0.021 | 0.026 |
+| 2nd harmonic / fundamental, T1 | 0.003 | 0.015 | 0.017 |
+| T1 mean / amplitude (°C) | 41.03 / 1.17 | 36.00 / 4.25 | 36.99 / **5.15** |
+| Applied PWM range | 4 to 64 | −207 to +130 | −249 to +156 |
+| Samples clipped at ±255 | 0 | 0 | 0 |
+
+**Decision: use PI.** It gives the correct mean and the largest boundary amplitude, with low distortion (about 2–3% second harmonic), and no clipping. The cost is that cooling PWM reaches −249, close to the limit. Most of the remaining tracking error is the 0.7 rad lag, which does not matter for the Angstrom fit, because the fit uses T1 as the measured boundary.
