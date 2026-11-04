@@ -25,6 +25,7 @@ Positions from Module 7 section 1; sensors not moved for Module 8 (spacing judge
 | Nov 4 | `angstrom_raw_open_40_16_100_20261104_094810.csv` | OPEN | 40 / 16 | 100 | — | 26 | ran the full 1800 s, ended DONE, no faults |
 | Nov 4 | `angstrom_raw_P_40_16_100_20261104_102713.csv` | P | 40 / 16 | 100 | 16 / 0 | 26 (not re-read) | 600 s, ended DONE, no faults. Separate file from the open-loop trial because the GUI was relaunched |
 | Nov 4 | `angstrom_raw_PI_40_16_100_20261104_105054.csv` | PI | 40 / 16 | 100 | 16 / 0.5 | 26 (not re-read) | 600 s, ended DONE, no faults |
+| Nov 4 | `angstrom_raw_PI_settled_100_240_20261104_111340.csv` | PI | 40 / 16 | 100 then 240 | 16 / 0.5 | 26 (not re-read) | 600 s + 1200 s, shortened from 70 min at the user's request, ended DONE, no faults. Phase continuous at the switch (t = 605.5 s) |
 
 ## Trial 1: open loop, 40 ± 16 °C, 100 s (Nov 4)
 
@@ -91,3 +92,26 @@ Preliminary, T1–T4: q = 21.65 m⁻¹, q′ = 20.01 rad/m, κ = 7.25 × 10⁻�
 | Samples clipped at ±255 | 0 | 0 | 0 |
 
 **Decision: use PI.** It gives the correct mean and the largest boundary amplitude, with low distortion (about 2–3% second harmonic), and no clipping. The cost is that cooling PWM reaches −249, close to the limit. Most of the remaining tracking error is the 0.7 rad lag, which does not matter for the Angstrom fit, because the fit uses T1 as the measured boundary.
+
+## Trial 4: PI, two periods in one run (Nov 4)
+
+Figures and numbers: `docs/figures/module_08/angstrom_raw_PI_settled_100_240_20261104_111340_fit_*`. The `_fit_240s` files are the last-3-cycle fit.
+
+**240 s, last 3 cycles (t = 1084–1804 s), all five rod sensors:**
+
+| Sensor | Mean (°C) | Drift (°C/min) | B (°C) | φ (rad) | B / residual sd |
+|---|---|---|---|---|---|
+| TEC | 40.00 | +0.003 | 16.514 | 1.27 | 160 |
+| T1 | 37.99 | +0.006 | 7.725 | 0.73 | 133 |
+| T2 | 36.40 | +0.006 | 3.807 | 0.08 | 123 |
+| T3 | 35.01 | +0.009 | 1.860 | −0.57 | 73 |
+| T4 | 34.51 | +0.011 | 0.891 | −1.22 | 36 |
+| T6 | 33.77 | +0.012 | 0.431 | −1.99 | 16 |
+
+q = 14.39 m⁻¹, q′ = 13.44 rad/m, **κ = 6.77 × 10⁻⁵ m²/s, ν = 1.79 × 10⁻³ s⁻¹** (no uncertainties yet). Using ρ = 2700 kg/m³, c = 896 J/kg·K (Lienhard Table A.1): k = ρcκ ≈ 164 W/m·K (table 167), and h = νρcd/4 ≈ 13.8 W/m²K. m = √(q² − q′²) ≈ 5.1 m⁻¹.
+
+**Settling at 240 s:** cycle-by-cycle fits show cycle 1 still carries the transient from the period change (T3 B = 1.60 °C, then 1.85–1.89 °C; T6 B = 0.61 °C, then 0.43–0.47 °C). Cycles 2–5 agree within about 3–10%, with means changing ≤ 0.1 °C per cycle. So this run has **about 4 settled cycles at 240 s, one short of the required 5**.
+
+**100 s, 5 cycles (t = 106–606 s):** q = 21.62 m⁻¹, q′ = 20.28 rad/m, κ = 7.17 × 10⁻⁵ m²/s, ν = 4.0 × 10⁻³ s⁻¹. **Not settled:** rod means rising 0.15–0.38 °C/min, because the rod started from about 29 °C. Do not use this interval for the final ν.
+
+Settling criterion for the production run still needs to be chosen and stated.
