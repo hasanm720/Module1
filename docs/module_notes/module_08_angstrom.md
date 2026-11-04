@@ -22,4 +22,22 @@ Positions from Module 7 section 1; sensors not moved for Module 8 (spacing judge
 
 | Date | File | Mode | Ta / Tb (°C) | Period (s) | Kp / Ki | Room (°C) | Notes |
 |---|---|---|---|---|---|---|---|
-| Nov 4 | (pending) | OPEN | 40 / 16 | 100 | — | 26 | first trial, room temperature recorded before start |
+| Nov 4 | `angstrom_raw_open_40_16_100_20261104_094810.csv` | OPEN | 40 / 16 | 100 | — | 26 | ran the full 1800 s, ended DONE, no faults |
+
+## Trial 1: open loop, 40 ± 16 °C, 100 s (Nov 4)
+
+Fit: last 5 cycles, t = 1305–1804 s (`code/module8/fit_sinusoids.py`). Figure and numbers: `docs/figures/module_08/angstrom_raw_open_40_16_100_20261104_094810_fit_100s.*`.
+
+| Sensor | Mean (°C) | Drift (°C/min) | B (°C) | φ (rad) | B / residual sd |
+|---|---|---|---|---|---|
+| TEC | 44.59 | +0.022 | 3.582 | −3.12 | 190 |
+| T1 | 41.03 | +0.053 | 1.168 | −3.90 | 47 |
+| T2 | 38.45 | +0.067 | 0.401 | −4.92 | 11 |
+| T3 | 36.37 | +0.078 | 0.145 | −5.94 | 3.4 |
+| T4 | 35.36 | +0.085 | 0.049 | −6.76 | 1.2 |
+| T6 | 34.30 | +0.092 | 0.007 | −7.24 | 0.2 |
+
+- **Preliminary, T1–T3 only:** q = 20.7 m⁻¹, q′ = 20.2 rad/m, κ = 7.5 × 10⁻⁵ m²/s, ν = 1.35 × 10⁻³ s⁻¹. Planning values: κ = 6.90 × 10⁻⁵, ν = 1.30 × 10⁻³. No uncertainties yet.
+- **Boundary tracking is poor in open loop:** requested ±16 °C about 40 °C; the TEC gave ±3.6 °C about 44.6 °C.
+- **T4 and T6 are at or below noise** at this period (B/sd ≈ 1 and 0.2), so they are not usable here.
+- **Not fully settled:** means still drifted +0.05 to +0.09 °C/min.
