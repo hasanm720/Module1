@@ -122,3 +122,16 @@ Settling criterion for the production run still needs to be chosen and stated.
 - **Period 1, 200 s:** Nov 9, 10 cycles (2000 s), fixed duration. The settling test (`code/module8/settle_check.py`) is applied afterwards.
 - **Period 2, 500 s (user's choice, Nov 9):** next class, the same 10 cycles, which is 5000 s ≈ 83 min. Launch with `--hold` on the new sketch (HOLD/NEXT, upload first) so the step can be extended if the settling test has not passed.
 - Settling test: |Δmean| ≤ 0.10 °C, |ΔB|/B ≤ 5 %, |Δφ| ≤ 0.05 rad between successive cycles (TEC, T1–T4, plus T6 if B ≥ 0.1 °C); settled after 2 passes, then retain 5 cycles.
+
+## Production period 1: PI, 200 s, 10 cycles (Nov 9)
+
+File: `data/module_08/angstrom_raw_production_200_20261109_111833.csv` (2000 s, ended DONE, no faults). Room ≈ 26 °C from the six sensors at idle before the start. Earlier the same day, a 240 s attempt (`angstrom_raw_production_240_400_20261109_103824.csv`) was stopped by the user at 28 min; it is not an allowed period.
+
+**Settling test (`settle_check.py`): NOT met.** No two consecutive cycle comparisons passed.
+
+- **Mean:** settled by cycles 6–8 (Δmean 0.04, 0.01 °C).
+- **Amplitude at T4 and T6 (±0.6 and ±0.27 °C):** scatter of 10–35 % between cycles.
+- **Electrical reference shifts:** all six channels stepped about +0.4 °C together at t ≈ 1622 s and back about −0.47 °C at t ≈ 1993 s, with no change in PWM. This is likely the shared 5 V rail, not heat. It disturbs cycles 8–10. Check the breadboard 5 V wiring and the H-bridge VCC before the next run.
+- **T1–T3 only:** amplitude still changed 4–11 % per cycle, so it also fails at 5 %.
+
+**Reference fit, cycles 5–9 (t = 805–1804 s), not a settled interval:** drift ≤ 0.02 °C/min. q = 15.98 m⁻¹, q′ = 14.70 rad/m, κ = 6.69 × 10⁻⁵ m²/s, ν = 2.6 × 10⁻³ s⁻¹ (T1–T6). Figure: `docs/figures/module_08/angstrom_raw_production_200_20261109_111833_fit_200s.png`.
