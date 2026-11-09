@@ -93,6 +93,22 @@ int main(){
   check(pwm()==43&&r[15]=="nan","OPEN at 45 C uses Module 4 PWM 43; unused fields are nan");
   cmd("BOGUS"); pump(1.5); check(state()=="STOPPED"&&heat==0,"unknown command during a run stops it");
   cmd("START"); pump(2); cmd("STOP"); pump(1.5); check(state()=="STOPPED"&&heat==0&&cool==0,"STOP zeroes output");
+  // HOLD / NEXT.
+  events.clear(); cmd("HOLD ON"); cmd("CLEAR"); cmd("MODE PI"); cmd("STEP 120 40 8 100"); cmd("STEP 120 40 8 200"); pump(1);
+  cmd("START"); pump(200); r=f(lastRec);
+  check(state()=="RUN"&&r[3]=="1","HOLD ON: step 1 kept past its 120 s duration");
+  double sp1=atof(r[7].c_str()), t1=atof(r[0].c_str())/1000;
+  cmd("NEXT"); pump(1.5); r=f(lastRec);
+  check(state()=="RUN"&&r[3]=="2","NEXT moves to step 2 during the run");
+  double rate=fabs(atof(r[7].c_str())-sp1)/(atof(r[0].c_str())/1000-t1);
+  check(rate<8*2*PI/100*1.05,"setpoint continuous across NEXT");
+  bool sawNext=false; for(auto&e:events) if(e.find(",NEXT,")!=std::string::npos) sawNext=true;
+  check(sawNext,"NEXT printed as an event");
+  pump(300); check(state()=="RUN"&&f(lastRec)[3]=="2","HOLD still applies on the last step");
+  cmd("HOLD OFF"); pump(2); check(state()=="DONE"&&heat==0&&cool==0,"HOLD OFF past duration: run ends DONE, output zero");
+  cmd("START"); pump(2); cmd("NEXT"); pump(1.5); cmd("NEXT"); pump(1.5);
+  check(state()=="DONE"&&heat==0&&cool==0,"NEXT on the last step ends DONE with zero output");
+  cmd("NEXT"); pump(1.5); check(state()=="DONE","NEXT while idle is rejected, not started");
   check(overlap==0,"HEAT and COOL never on together (whole test)");
   printf("\n%d failure(s)\n",fails); return fails;
 }

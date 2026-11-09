@@ -13,6 +13,8 @@
 //   STEP <dur_s> <Ta> <Tb> <period_s>   append a schedule step (not during a run)
 //   START                       begin the schedule
 //   STOP                        end the run, output zero
+//   HOLD ON|OFF                 while on, the current step does not end by elapsed time
+//   NEXT                        go to the next step now (the last step ends the run)
 //
 // Every record has 18 fields (header printed at startup). "nan" is the placeholder
 // for fields that do not apply. Other lines start with EVENT.
@@ -77,6 +79,8 @@ unsigned long lastByteMs = 0;
 char commandBuffer[48];
 byte commandLength = 0;
 bool discardCommand = false;
+bool holdStep = false;     // Operator hold: wait for the settling test, not the clock.
+bool nextRequested = false;
 
 bool running() { return runState == RUNNING; }
 
@@ -185,14 +189,19 @@ void updateControl(float tecC, unsigned long nowMs) {
   float dt = (nowMs - lastControlMs) / 1000.0;
   lastControlMs = nowMs;
   stepElapsed += dt;
-  while (stepElapsed >= steps[currentStep].duration) {
-    stepElapsed -= steps[currentStep].duration;
+  // While held, the step stays at its full duration and waits for NEXT or HOLD OFF.
+  if (holdStep && stepElapsed > steps[currentStep].duration) stepElapsed = steps[currentStep].duration;
+  bool timeUp = !holdStep && stepElapsed >= steps[currentStep].duration;
+  while (nextRequested || timeUp) {
+    stepElapsed = nextRequested ? 0.0 : stepElapsed - steps[currentStep].duration;
+    nextRequested = false;
     if (++currentStep >= stepCount) {
       currentStep = stepCount - 1;
       endRun(DONE);
       return;
     }
     printStepEvent();
+    timeUp = !holdStep && stepElapsed >= steps[currentStep].duration;
   }
   const Step &step = steps[currentStep];
   // One running phase: changing the period changes its rate, so the setpoint cannot jump.
@@ -253,6 +262,7 @@ void startRun() {
   phase = 0.0;
   stepElapsed = 0.0;
   integralQ = 0.0;
+  nextRequested = false;  // HOLD is kept, so the GUI can send HOLD ON before START.
   lastControlMs = millis();
   printEventHead(F("START,"));
   Serial.print(modeName()); Serial.print(',');
@@ -278,6 +288,20 @@ void processCommand() {
   if (strcmp(commandBuffer, "START") == 0) {
     lastCommandMs = millis();
     if (!running()) startRun();
+    return;
+  }
+  // HOLD and NEXT are the only settings allowed during a run; they never touch the output.
+  if (strcmp(commandBuffer, "HOLD ON") == 0 || strcmp(commandBuffer, "HOLD OFF") == 0) {
+    lastCommandMs = millis();
+    holdStep = commandBuffer[6] == 'N';
+    printEventHead(F("HOLD,")); Serial.println(holdStep ? F("ON") : F("OFF"));
+    return;
+  }
+  if (strcmp(commandBuffer, "NEXT") == 0) {
+    lastCommandMs = millis();
+    if (!running()) { reject(F("not running")); return; }
+    nextRequested = true;
+    printEventHead(F("NEXT,")); Serial.println(currentStep + 1);
     return;
   }
   if (running()) { reject(F("busy")); return; }
