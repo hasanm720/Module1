@@ -23,6 +23,9 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 sys.path.insert(0, str(REPO / 'code/module5/P1_P-only_control'))
 from p_control_gui import QtWidgets, QtCore, pg, serial, find_port, BAUD_RATE
+import numpy as np
+sys.path.insert(0, str(HERE))
+import settling as st
 
 HEADER = ('time_ms,run_state,control_mode,step,Ta_C,Tb_C,period_s,setpoint_C,feedforward_pwm,'
           'TEC_C,T1_C,T2_C,T3_C,T4_C,T5_C,controller_pwm,heating_to_cooling_ratio,signed_pwm')
@@ -104,6 +107,10 @@ class AngstromGUI(QtWidgets.QMainWindow):
         self.accepted = self.rejected = self.missing = 0
         self.last_rejected = ''
         self.autostart = False
+        self.step_key = None      # (step, period) of the step being checked for settling
+        self.step_rows = []       # (t, {channel: value}) for that step
+        self.cycles_checked = 0
+        self.reported_ready = False
         self.build_ui()
 
         folder = REPO / 'data/module_08'
@@ -163,7 +170,10 @@ class AngstromGUI(QtWidgets.QMainWindow):
         self.add_row = QtWidgets.QPushButton('Add step'); self.remove_row = QtWidgets.QPushButton('Remove step')
         self.start_button = QtWidgets.QPushButton('Send schedule and START'); self.start_button.setMinimumHeight(36)
         self.stop_button = QtWidgets.QPushButton('STOP / PWM 0'); self.stop_button.setMinimumHeight(36)
-        for button in (self.add_row, self.remove_row, self.start_button, self.stop_button):
+        # Hold: a step only ends when the operator presses Next (after the settling test passes).
+        self.hold = QtWidgets.QCheckBox('Hold period until Next'); self.hold.setChecked(False)
+        self.next_button = QtWidgets.QPushButton('Next period →'); self.next_button.setMinimumHeight(36)
+        for button in (self.add_row, self.remove_row, self.start_button, self.hold, self.next_button, self.stop_button):
             buttons.addWidget(button)
 
         self.status = QtWidgets.QLabel('Waiting for connection'); self.status.setWordWrap(True)
@@ -171,7 +181,12 @@ class AngstromGUI(QtWidgets.QMainWindow):
         self.readout = QtWidgets.QLabel('State: — | Mode: — | Setpoint: — | PWM: 0')
         self.counts = QtWidgets.QLabel('Accepted lines: 0 | Rejected lines: 0 | Missing-record gaps: 0')
         self.log_label = QtWidgets.QLabel()
-        for widget in (self.status, self.readout, self.counts, self.log_label):
+        self.settle_label = QtWidgets.QLabel(
+            f'Settling test (per cycle): |Δmean| ≤ {st.MEAN_TOL_C} °C, |ΔB|/B ≤ {100*st.AMP_TOL:g}%, '
+            f'|Δφ| ≤ {st.PHASE_TOL_RAD} rad; settled after {st.SETTLE_PASSES} passes, then keep {st.RETAIN_CYCLES} cycles')
+        self.settle_label.setWordWrap(True)
+        self.settle_label.setStyleSheet('font-size: 13px; font-weight: bold;')
+        for widget in (self.status, self.readout, self.counts, self.settle_label, self.log_label):
             layout.addWidget(widget)
 
         numbers = QtWidgets.QGridLayout()
@@ -209,6 +224,8 @@ class AngstromGUI(QtWidgets.QMainWindow):
         self.remove_row.clicked.connect(lambda: self.schedule.removeRow(self.schedule.rowCount() - 1))
         self.start_button.clicked.connect(self.start_run)
         self.stop_button.clicked.connect(self.stop_run)
+        self.hold.toggled.connect(self.send_hold)
+        self.next_button.clicked.connect(self.next_period)
 
     def set_schedule(self, steps):
         self.schedule.setRowCount(len(steps))
@@ -256,6 +273,7 @@ class AngstromGUI(QtWidgets.QMainWindow):
                               f'GAINS {self.kp.value():.3f} {self.ki.value():.4f}',
                               f'RATIO {self.ratio.value():.3f}', f'LIMIT {self.pwm_limit.value()}', 'CLEAR'])
         self.commands.extend('STEP {:g} {:g} {:g} {:g}'.format(*step) for step in steps)
+        self.commands.append('HOLD ON' if self.hold.isChecked() else 'HOLD OFF')
         self.commands.append('START')
         self.note_event(f'GUI start request: mode {self.mode.currentText()}, Kp {self.kp.value():g}, '
                         f'Ki {self.ki.value():g}, r {self.ratio.value():g}, schedule {steps}')
@@ -268,6 +286,61 @@ class AngstromGUI(QtWidgets.QMainWindow):
         except (OSError, serial.SerialException) as error:
             self.status.setText(f'Cannot send STOP: {error}')
         self.note_event('GUI STOP pressed')
+
+    def send_hold(self, on):
+        try:
+            self.write('HOLD ON' if on else 'HOLD OFF')
+        except (OSError, serial.SerialException) as error:
+            self.status.setText(f'Cannot send HOLD: {error}')
+        self.note_event(f'GUI hold {"ON" if on else "OFF"}')
+
+    def next_period(self):
+        try:
+            self.write('NEXT')
+        except (OSError, serial.SerialException) as error:
+            self.status.setText(f'Cannot send NEXT: {error}')
+        self.note_event('GUI Next period pressed')
+
+    def check_settling(self, record):
+        """Run the settling test after each complete cycle of the active step."""
+        if record['run_state'] != 'RUN':
+            return
+        key = (record['step'], record['period_s'])
+        if key != self.step_key:
+            self.step_key, self.step_rows, self.cycles_checked, self.reported_ready = key, [], 0, False
+        self.step_rows.append((record['time_ms']/1000, {c: record[c] for c in st.CHANNELS + ['T5_C']}))
+        period = record['period_s']
+        t = np.array([row[0] for row in self.step_rows])
+        complete = int((t[-1] - t[0] + 1.0) // period)
+        if complete == self.cycles_checked or complete < 2:
+            if complete < 2:
+                self.settle_label.setText(f'Step {key[0]} ({period:g} s): waiting for 2 complete cycles '
+                                          f'({t[-1] - t[0]:.0f}/{2*period:g} s)')
+            return
+        self.cycles_checked = complete
+        temps = {c: np.array([row[1][c] for row in self.step_rows]) for c in st.CHANNELS + ['T5_C']}
+        cycles = st.cycle_fits(t, temps, t[0], period, st.CHANNELS + ['T5_C'])
+        channels = st.CHANNELS + (['T5_C'] if st.measurable(cycles) else [])
+        results, settled_at, retained = st.settling_status(cycles, channels)
+        i, passed, worst = results[-1]
+        text = (f'Step {key[0]} ({period:g} s), cycle {i + 1}: Δmean {worst["mean"]:.3f} °C, '
+                f'ΔB/B {100*worst["amp"]:.1f}%, Δφ {worst["phase"]:.3f} rad → {"pass" if passed else "FAIL"} | ')
+        if settled_at is None:
+            text += 'NOT settled yet'
+            color = '#a34b00'
+        elif len(retained) < st.RETAIN_CYCLES:
+            text += f'settled; retained {len(retained)}/{st.RETAIN_CYCLES} cycles'
+            color = '#1565c0'
+        else:
+            first, last = cycles[retained[0]], cycles[retained[-1]]
+            text += f'READY: {st.RETAIN_CYCLES} settled cycles, t = {first["start"]:.0f}–{last["end"]:.0f} s. Press Next period.'
+            color = 'green'
+            if not self.reported_ready:
+                self.reported_ready = True
+                self.note_event(f'GUI settled: step {key[0]} period {period:g} s retained t = '
+                                f'{first["start"]:.1f}-{last["end"]:.1f} s, channels {",".join(channels)}')
+        self.settle_label.setText(text)
+        self.settle_label.setStyleSheet(f'font-size: 13px; font-weight: bold; color: {color};')
 
     def note_event(self, text):
         self.events_file.write(f'{datetime.now().isoformat(timespec="seconds")} {text}\n')
@@ -307,6 +380,7 @@ class AngstromGUI(QtWidgets.QMainWindow):
                 if self.last_record and (record['time_ms'] - self.last_record['time_ms'])/1000 > MISSING_GAP_S:
                     self.missing += 1
                 self.last_record = newest = record
+                self.check_settling(record)
             self.counts.setText(f'Accepted lines: {self.accepted} | Rejected lines: {self.rejected} | '
                                 f'Missing-record gaps: {self.missing}'
                                 + (f' | last rejected: {self.last_rejected}' if self.rejected else ''))
@@ -379,6 +453,7 @@ if __name__ == '__main__':
     parser.add_argument('--schedule', help='Steps "duration,Ta,Tb,period;..."')
     parser.add_argument('--window', type=int, help='Preset plot window (s)')
     parser.add_argument('--start', action='store_true', help='Send the schedule and START once telemetry is up')
+    parser.add_argument('--hold', action='store_true', help='Hold each period until Next is pressed')
     args = parser.parse_args()
     app = QtWidgets.QApplication(sys.argv)
     gui = AngstromGUI(args.port, args.label)
@@ -388,6 +463,8 @@ if __name__ == '__main__':
     if args.ratio is not None: gui.ratio.setValue(args.ratio)
     if args.window: gui.window.setValue(args.window)
     if args.schedule: gui.set_schedule(parse_schedule(args.schedule))
+    if args.hold:
+        gui.hold.blockSignals(True); gui.hold.setChecked(True); gui.hold.blockSignals(False)
     gui.autostart = args.start
     gui.show()
     sys.exit(app.exec())
