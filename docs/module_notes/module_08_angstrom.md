@@ -115,3 +115,10 @@ q = 14.39 m⁻¹, q′ = 13.44 rad/m, **κ = 6.77 × 10⁻⁵ m²/s, ν = 1.79 �
 **100 s, 5 cycles (t = 106–606 s):** q = 21.62 m⁻¹, q′ = 20.28 rad/m, κ = 7.17 × 10⁻⁵ m²/s, ν = 4.0 × 10⁻³ s⁻¹. **Not settled:** rod means rising 0.15–0.38 °C/min, because the rod started from about 29 °C. Do not use this interval for the final ν.
 
 Settling criterion for the production run still needs to be chosen and stated.
+
+## Production plan (Stage 5), updated Nov 9
+
+- Lab-09 was rewritten. S18.10: "Candidate periods are 100, 200, 300, 400, and 500 seconds." The earlier 240 s runs are not on the list and are kept as pilot data only.
+- **Period 1, 200 s:** Nov 9, 10 cycles (2000 s), fixed duration. The settling test (`code/module8/settle_check.py`) is applied afterwards.
+- **Period 2, 500 s (user's choice, Nov 9):** next class, the same 10 cycles, which is 5000 s ≈ 83 min. Launch with `--hold` on the new sketch (HOLD/NEXT, upload first) so the step can be extended if the settling test has not passed.
+- Settling test: |Δmean| ≤ 0.10 °C, |ΔB|/B ≤ 5 %, |Δφ| ≤ 0.05 rad between successive cycles (TEC, T1–T4, plus T6 if B ≥ 0.1 °C); settled after 2 passes, then retain 5 cycles.
