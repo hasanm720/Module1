@@ -148,3 +148,13 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
   - With T6 included it never passed: T6 cycle-to-cycle ΔB 4–6 %, Δφ up to 0.075 rad.
 - **Open decision:** whether the settling test uses TEC + T1–T4 (≥ 3 rod sensors, as the page requires) with T6 kept in the fits.
 - **Reference fit, cycles 3–7 (t = 1005–3504 s), not a settled interval:** drift ≤ 0.015 °C/min, all six channels B/sd ≥ 11. q = 9.95 m⁻¹, q′ = 9.85 rad/m, κ = 6.41 × 10⁻⁵ m²/s, ν = 1.3 × 10⁻⁴ s⁻¹. Fitting only the last 2 cycles gives q′ ≥ q (ν ≈ −1 × 10⁻⁵), which lab-09 calls "evidence to investigate". At 500 s, ν is poorly determined from q and q′ alone. Figure: `docs/figures/module_08/angstrom_raw_production_500_20261111_092817_fit_500s.png` (cycles 3–7).
+
+## Production 500 s run 2 and 100 s run (Nov 11)
+
+- `angstrom_raw_production_500_run2_20261111_105221.csv`: a restart at 500 s, stopped by the user after about 15 min to switch to 100 s because of class time. Not usable for settling.
+- `angstrom_raw_production_100_20261111_110713.csv`: PI, 40 ± 16 °C, 100 s, 18 cycles (1800 s), ended DONE, no faults, no common-mode jumps. The rod started warm from the 500 s run.
+  - **Settling test (noise-scaled limits): not met.** With TEC + T1–T3 it reached "settled, 1/5 retained" at cycle 14, then reset at cycle 16 on a real 0.18 °C mean jump (not electrical).
+  - T3's per-cycle fits are very clean (residual sd ≈ 0.009 °C), yet its amplitude varies ±4–6 % and its phase up to 0.12 rad from cycle to cycle with no trend. This is random physical wobble (probably room air), not drift, and not covered by fit-noise limits.
+  - PWM figure: `docs/figures/module_08/angstrom_raw_production_100_20261111_110713_pwm.png`. PWM −233 to +168, never clipped.
+- **Proposed:** replace the cycle-to-cycle limits with a no-trend test (linear slope of mean, B and φ over the retained cycles, compared with their scatter). Awaiting the user's decision.
+- **Page changed again (Nov 11):** Stage 5 now asks for production data at all five periods (100, 200, 300, 400, 500 s); S18.3 now starts at 300 s with u_b = 50; S18.7 tests 100/200/300 s; S18.5 defines feedforward as u₀ = (T_set − T_room)/χh with negatives × r (ours used the Module 4 lookup table). A5 due Mon Nov 23, 9:05 AM (official once posted in Moodle).
