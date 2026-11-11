@@ -158,3 +158,10 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
   - PWM figure: `docs/figures/module_08/angstrom_raw_production_100_20261111_110713_pwm.png`. PWM −233 to +168, never clipped.
 - **Proposed:** replace the cycle-to-cycle limits with a no-trend test (linear slope of mean, B and φ over the retained cycles, compared with their scatter). Awaiting the user's decision.
 - **Page changed again (Nov 11):** Stage 5 now asks for production data at all five periods (100, 200, 300, 400, 500 s); S18.3 now starts at 300 s with u_b = 50; S18.7 tests 100/200/300 s; S18.5 defines feedforward as u₀ = (T_set − T_room)/χh with negatives × r (ours used the Module 4 lookup table). A5 due Mon Nov 23, 9:05 AM (official once posted in Moodle).
+
+## Next class (user's note, Nov 11)
+
+1. **Read the text parts of lab-09** (instructions, what to produce, what to save). The math derivations can be skipped for now.
+2. **First bench step: Stage 2, S18.3, zero-centered sinusoidal PWM.** u(t) = u_a + u_b sin(ωt) with u_a = 0, u_b = 50 PWM counts (page's initial value), PWM limits −255 to +255. Start at **300 s**, then keep the same u_b for **300, 200 and 100 s**. Record PWM and all six temperatures. The page asks: "Plot the measured TEC temperature and signed PWM on aligned time axes."
+   - **Software needed first:** the sketch has no direct sinusoidal-PWM mode yet (OPEN uses the temperature lookup table). Add a `PWM` mode with u_a and u_b, then sim-test it before the run.
+3. Then S18.4, positive-only PWM at 100 s (choose u_a for a TEC mean near 40 °C, same u_b).
