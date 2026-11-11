@@ -147,3 +147,4 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
   - With TEC + T1–T4, cycles 6 and 7 passed, so it was **settled after cycle 7 with 0/5 retained** when the run ended.
   - With T6 included it never passed: T6 cycle-to-cycle ΔB 4–6 %, Δφ up to 0.075 rad.
 - **Open decision:** whether the settling test uses TEC + T1–T4 (≥ 3 rod sensors, as the page requires) with T6 kept in the fits.
+- **Reference fit, cycles 3–7 (t = 1005–3504 s), not a settled interval:** drift ≤ 0.015 °C/min, all six channels B/sd ≥ 11. q = 9.95 m⁻¹, q′ = 9.85 rad/m, κ = 6.41 × 10⁻⁵ m²/s, ν = 1.3 × 10⁻⁴ s⁻¹. Fitting only the last 2 cycles gives q′ ≥ q (ν ≈ −1 × 10⁻⁵), which lab-09 calls "evidence to investigate". At 500 s, ν is poorly determined from q and q′ alone. Figure: `docs/figures/module_08/angstrom_raw_production_500_20261111_092817_fit_500s.png` (cycles 3–7).
