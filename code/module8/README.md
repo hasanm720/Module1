@@ -20,7 +20,7 @@ Open [module_08_angstrom_controller.ino](module_08_angstrom_controller/module_08
 
 ## Settling and period changes (lab-09 S18.9–S18.10)
 
-- **Test** (`settling.py`, shared by the GUI and `settle_check.py`): between successive complete cycles, |Δmean| ≤ 0.10 °C, |ΔB|/B ≤ 5 %, |Δφ| ≤ 0.05 rad for TEC and T1–T4 (T6 added when its amplitude is ≥ 0.1 °C). Settled after 2 consecutive passes; then 5 cycles are retained, and each must also pass.
+- **Test** (`settling.py`, shared by the GUI and `settle_check.py`): between successive complete cycles, |Δmean| ≤ 0.10 °C, |ΔB|/B ≤ 5 %, |Δφ| ≤ 0.05 rad, or 3 × each sensor's own fit noise if that is larger (S18.9: tolerances justified by measured noise and fit uncertainty), for TEC and T1–T4 (T6 added when its amplitude is ≥ 0.1 °C). Settled after 2 consecutive passes; then 5 cycles are retained, and each must also pass.
 - **Live:** the GUI shows this after every cycle. Tick **Hold period until Next** (or launch with `--hold`); when it reads **READY**, press **Next period →**. Arduino commands: `HOLD ON|OFF`, `NEXT` (phase stays continuous; the last step ends the run at zero output).
 - **Offline:** `python code/module8/settle_check.py RUN.csv` prints the same test per period and fits the retained cycles.
 

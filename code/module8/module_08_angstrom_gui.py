@@ -183,7 +183,8 @@ class AngstromGUI(QtWidgets.QMainWindow):
         self.log_label = QtWidgets.QLabel()
         self.settle_label = QtWidgets.QLabel(
             f'Settling test (per cycle): |Δmean| ≤ {st.MEAN_TOL_C} °C, |ΔB|/B ≤ {100*st.AMP_TOL:g}%, '
-            f'|Δφ| ≤ {st.PHASE_TOL_RAD} rad; settled after {st.SETTLE_PASSES} passes, then keep {st.RETAIN_CYCLES} cycles')
+            f'|Δφ| ≤ {st.PHASE_TOL_RAD} rad, or {st.NOISE_K:g}× each sensor\'s fit noise if larger; '
+            f'settled after {st.SETTLE_PASSES} passes, then keep {st.RETAIN_CYCLES} cycles')
         self.settle_label.setWordWrap(True)
         self.settle_label.setStyleSheet('font-size: 13px; font-weight: bold;')
         for widget in (self.status, self.readout, self.counts, self.settle_label, self.log_label):

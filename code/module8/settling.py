@@ -2,7 +2,12 @@
 
 Each complete drive cycle of one step is fitted with mean, B and phase (fit_sinusoids.fit_channel).
 Successive cycles are compared. A comparison passes when, for every checked channel,
-    |Δ mean| <= MEAN_TOL_C,  |ΔB|/B <= AMP_TOL,  |Δφ| <= PHASE_TOL_RAD.
+    |Δ mean| <= tol_mean,  |ΔB|/B <= tol_amp,  |Δφ| <= tol_phase.
+Each channel's tolerance is the larger of the fixed limit (MEAN_TOL_C, AMP_TOL, PHASE_TOL_RAD) and
+NOISE_K times the change expected from fit noise alone (lab-09 S18.9: "use the measured noise and
+fit uncertainty to justify them"). With residual sd s over n samples in one cycle, white-noise fit
+uncertainties are u(mean) = s/sqrt(n), u(B) = s*sqrt(2/n), u(phi) = u(B)/B; a difference of two
+cycles has sqrt(2) times that.
 The response counts as settled after SETTLE_PASSES consecutive passing comparisons; the next
 RETAIN_CYCLES complete cycles are retained, and each must also pass.
 """
@@ -18,6 +23,7 @@ from fit_sinusoids import fit_channel
 MEAN_TOL_C = 0.10
 AMP_TOL = 0.05
 PHASE_TOL_RAD = 0.05
+NOISE_K = 3.0
 SETTLE_PASSES = 2
 RETAIN_CYCLES = 5
 CHANNELS = ['TEC_C', 'T1_C', 'T2_C', 'T3_C', 'T4_C']  # T5_C (tag T6) added only if measurable
@@ -37,21 +43,38 @@ def cycle_fits(t, temps, start, period, channels=CHANNELS):
         cycles.append({'start': start + k*period, 'end': start + (k + 1)*period,
                        'mean': {c: f[0] for c, f in fits.items()},
                        'B': {c: f[2] for c, f in fits.items()},
-                       'phi': {c: f[3] for c, f in fits.items()}})
+                       'phi': {c: f[3] for c, f in fits.items()},
+                       'sd': {c: f[4] for c, f in fits.items()}, 'n': int(m.sum())})
         k += 1
     return cycles
 
 
+def tolerances(previous, current, c):
+    """Per-channel (mean, relative amplitude, phase) limits: fixed floor or NOISE_K x fit noise."""
+    s = (previous['sd'][c] + current['sd'][c])/2
+    n = min(previous['n'], current['n'])
+    b = (previous['B'][c] + current['B'][c])/2
+    u_mean, u_b = s/math.sqrt(n), s*math.sqrt(2/n)
+    k = NOISE_K*math.sqrt(2)
+    return max(MEAN_TOL_C, k*u_mean), max(AMP_TOL, k*u_b/b), max(PHASE_TOL_RAD, k*u_b/b)
+
+
 def compare(previous, current, channels=CHANNELS):
-    """Return (passed, worst changes) between two successive cycle fits."""
-    worst = {'mean': 0.0, 'amp': 0.0, 'phase': 0.0}
+    """Return (passed, worst) between two successive cycle fits.
+
+    worst holds the largest change of each kind and 'ratio', the largest change/limit (pass if <= 1).
+    """
+    worst = {'mean': 0.0, 'amp': 0.0, 'phase': 0.0, 'ratio': 0.0}
     for c in channels:
         dphi = (current['phi'][c] - previous['phi'][c] + math.pi) % (2*math.pi) - math.pi
-        worst['mean'] = max(worst['mean'], abs(current['mean'][c] - previous['mean'][c]))
-        worst['amp'] = max(worst['amp'], abs(current['B'][c] - previous['B'][c])/previous['B'][c])
+        dmean = abs(current['mean'][c] - previous['mean'][c])
+        damp = abs(current['B'][c] - previous['B'][c])/previous['B'][c]
+        tol_mean, tol_amp, tol_phase = tolerances(previous, current, c)
+        worst['mean'] = max(worst['mean'], dmean)
+        worst['amp'] = max(worst['amp'], damp)
         worst['phase'] = max(worst['phase'], abs(dphi))
-    passed = worst['mean'] <= MEAN_TOL_C and worst['amp'] <= AMP_TOL and worst['phase'] <= PHASE_TOL_RAD
-    return passed, worst
+        worst['ratio'] = max(worst['ratio'], dmean/tol_mean, damp/tol_amp, abs(dphi)/tol_phase)
+    return worst['ratio'] <= 1.0, worst
 
 
 def settling_status(cycles, channels=CHANNELS):
