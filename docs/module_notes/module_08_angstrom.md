@@ -135,3 +135,15 @@ File: `data/module_08/angstrom_raw_production_200_20261109_111833.csv` (2000 s, 
 - **T1–T3 only:** amplitude still changed 4–11 % per cycle, so it also fails at 5 %.
 
 **Reference fit, cycles 5–9 (t = 805–1804 s), not a settled interval:** drift ≤ 0.02 °C/min. q = 15.98 m⁻¹, q′ = 14.70 rad/m, κ = 6.69 × 10⁻⁵ m²/s, ν = 2.6 × 10⁻³ s⁻¹ (T1–T6). Figure: `docs/figures/module_08/angstrom_raw_production_200_20261109_111833_fit_200s.png`.
+
+## Production period 2: PI, 500 s, Hold on (Nov 11)
+
+File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEXT sketch uploaded and checked on the board before the run. Room ≈ 23 °C (sensors at idle). The 5 V wiring was re-seated before the run.
+
+- **Ended unexpectedly after 62.4 min (7.5 cycles)**, when the Claude Code session ended and closed the GUI. The Arduino's 2 s heartbeat timeout turned the TEC off. The log's last record is still RUN.
+- **No common-mode jumps** this time (none > 0.25 °C), so the Nov 9 reference shifts were most likely the 5 V wiring.
+- **Settling test:**
+  - The mean passed from cycle 6 (0.098, then 0.062 °C).
+  - With TEC + T1–T4, cycles 6 and 7 passed, so it was **settled after cycle 7 with 0/5 retained** when the run ended.
+  - With T6 included it never passed: T6 cycle-to-cycle ΔB 4–6 %, Δφ up to 0.075 rad.
+- **Open decision:** whether the settling test uses TEC + T1–T4 (≥ 3 rod sensors, as the page requires) with T6 kept in the fits.
