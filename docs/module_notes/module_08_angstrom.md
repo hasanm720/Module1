@@ -165,3 +165,9 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
 2. **First bench step: Stage 2, S18.3, zero-centered sinusoidal PWM.** u(t) = u_a + u_b sin(ωt) with u_a = 0, u_b = 50 PWM counts (page's initial value), PWM limits −255 to +255. Start at **300 s**, then keep the same u_b for **300, 200 and 100 s**. Record PWM and all six temperatures. The page asks: "Plot the measured TEC temperature and signed PWM on aligned time axes."
    - **Software needed first:** the sketch has no direct sinusoidal-PWM mode yet (OPEN uses the temperature lookup table). Add a `PWM` mode with u_a and u_b, then sim-test it before the run.
 3. Then S18.4, positive-only PWM at 100 s (choose u_a for a TEC mean near 40 °C, same u_b).
+
+## Stage 2, S18.3: zero-centered sinusoidal PWM (Nov 16)
+
+- Room temperature **22 °C** (user's measurement). All six sensors read 22.0–22.3 °C before the start.
+- New sketch with `MODE PWM` uploaded and checked on the board. The board's port is now `/dev/cu.usbmodem1101`.
+- **Run 1:** u_a = 0, u_b = 50, period 300 s, 8 cycles (2400 s). File: `data/module_08/angstrom_raw_s18_3_zero_300_20261116_100920.csv`.
