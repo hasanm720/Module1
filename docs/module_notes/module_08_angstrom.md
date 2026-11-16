@@ -186,3 +186,20 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
 - The mean sits about 5.5 °C above room even though the PWM averages zero. Heating is stronger than cooling (χh > χc), so the "absolute-value" term in the page's decomposition shifts the mean up.
 - Faster drive gives a smaller amplitude and a larger lag, as the one-lump low-pass model predicts. tan(lag)/ω gives τ_th ≈ 57 s (300 s), 54 s (200 s), 47 s (100 s).
 - The TEC waveform is lopsided: tall, narrow peaks and flat troughs. The residual is largest at 300 s.
+
+**S18.3 one-lump model table** (`code/module8/s18_3_onelump_sim.py`). The simulator's lumped mode was reproduced from its page source: same equation, RK4 at 0.01 s, settled-cycle readout after 5τ. Settings from the page: room = initial = 22 °C, τ = 80 s, χh = 0.46, u_a = 0, u_b = 50. The browser simulator itself was not clicked.
+
+| Period (s) | χc | (1) Mean minus room (°C) | (2) Amplitude (°C) | (3) Phase lag (°) | (4) Residual amplitude (°C) |
+|---|---|---|---|---|---|
+| 100 | 0.23 | 3.660 | 3.366 | 78.8 | 0.240 |
+| 100 | 0.46 | 0.005 | 4.488 | 78.7 | 0.003 |
+| 200 | 0.23 | 3.661 | 6.377 | 68.3 | 0.473 |
+| 200 | 0.46 | 0.002 | 8.503 | 68.3 | 0.002 |
+| 300 | 0.23 | 3.661 | 8.840 | 59.2 | 0.695 |
+| 300 | 0.46 | 0.000 | 11.787 | 59.2 | 0.000 |
+
+- **Equal χ:** amplitude and lag match the analytical solution exactly (4.488/8.503/11.787 °C; 78.7/68.3/59.2°), and the residual is 0 as the page says it should be.
+- **Fixed period, χc halved:** the mean rises by (u_b/2)(χh − χc)(2/π) = 3.66 °C, the amplitude drops by 25 %, the lag is unchanged, and a residual appears at 2ω (two bumps per PWM cycle).
+- **Fixed χc, longer period:** larger amplitude and smaller lag; the mean shift is unchanged.
+- **Against our measurement:** measured mean − room 5.4–5.8 °C, consistent with our χh − χc = 0.53 − 0.19 = 0.34 → 25 × 0.34 × 2/π ≈ 5.4 °C. Measured lags (50/59/71°) are about 8–9° smaller than the τ = 80 s model, which implies τ_th ≈ 50–57 s.
+- Aligned plot of both χ settings at 100 s: `docs/figures/module_08/s18_3_onelump_model.png`.
