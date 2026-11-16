@@ -33,7 +33,7 @@ FIELDS = HEADER.split(',')
 LABELS = ['TEC tag T5 (A1)', 'T1 (A5)', 'T2 (A4)', 'T3 (A3)', 'T4 (A2)', 'T6 (A0)']  # physical wire tags
 COLORS = ['k', '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 RUN_STATES = ('IDLE', 'RUN', 'DONE', 'STOPPED', 'SHUTDOWN', 'SENSOR_FAULT', 'ROD_LIMIT', 'TIMEOUT')
-MODES = ('OPEN', 'P', 'PI')
+MODES = ('OPEN', 'P', 'PI', 'PWM')  # PWM: lab-09 Stage 2 raw sinusoidal PWM, no feedback
 # Same limits as the sketch; the Arduino checks them again.
 MIN_PERIOD_S, MAX_SETPOINT_C, MIN_SETPOINT_C, MAX_STEPS = 100.0, 56.0, 10.0, 8
 HEARTBEAT_S = 0.5
@@ -78,8 +78,8 @@ def parse_schedule(text):
     return steps
 
 
-def check_schedule(steps):
-    """Return an error message, or None if the schedule is allowed."""
+def check_schedule(steps, pwm_mode=False):
+    """Return an error message, or None if the schedule is allowed. PWM mode ignores Ta and Tb."""
     if not 1 <= len(steps) <= MAX_STEPS:
         return f'Need 1–{MAX_STEPS} steps.'
     for number, (duration, ta, tb, period) in enumerate(steps, 1):
@@ -87,7 +87,7 @@ def check_schedule(steps):
             return f'Step {number}: duration must be positive and Tb nonnegative.'
         if period < MIN_PERIOD_S:
             return f'Step {number}: period must be at least {MIN_PERIOD_S:g} s.'
-        if ta + tb > MAX_SETPOINT_C or ta - tb < MIN_SETPOINT_C:
+        if not pwm_mode and (ta + tb > MAX_SETPOINT_C or ta - tb < MIN_SETPOINT_C):
             return f'Step {number}: setpoint must stay within {MIN_SETPOINT_C:g}–{MAX_SETPOINT_C:g} °C.'
     return None
 
@@ -153,9 +153,13 @@ class AngstromGUI(QtWidgets.QMainWindow):
         self.ratio = QtWidgets.QDoubleSpinBox(); self.ratio.setDecimals(3); self.ratio.setRange(.1, 10); self.ratio.setValue(2.83)
         self.pwm_limit = QtWidgets.QSpinBox(); self.pwm_limit.setRange(1, 255); self.pwm_limit.setValue(255)
         self.window = QtWidgets.QSpinBox(); self.window.setRange(30, 14400); self.window.setValue(600)
+        # PWM mode only: u(t) = u_a + u_b sin(wt), PWM counts (lab-09 S18.3-S18.4).
+        self.ua = QtWidgets.QSpinBox(); self.ua.setRange(-255, 255); self.ua.setValue(0)
+        self.ub = QtWidgets.QSpinBox(); self.ub.setRange(0, 255); self.ub.setValue(50)
         for col, (label, widget) in enumerate([
                 ('Mode', self.mode), ('Kp (PWM/°C)', self.kp), ('Ki (PWM/°C/s)', self.ki),
-                ('Cooling ratio r', self.ratio), ('PWM limit', self.pwm_limit), ('Plot window (s)', self.window)]):
+                ('Cooling ratio r', self.ratio), ('PWM limit', self.pwm_limit), ('Plot window (s)', self.window),
+                ('PWM mode u_a', self.ua), ('PWM mode u_b', self.ub)]):
             controls.addWidget(QtWidgets.QLabel(label), 0, col)
             controls.addWidget(widget, 1, col)
 
@@ -262,7 +266,13 @@ class AngstromGUI(QtWidgets.QMainWindow):
             steps = self.read_schedule()
         except ValueError:
             self.status.setText('Schedule cells must be numbers.'); return
-        problem = 'Schedule has an empty cell.' if any(math.isnan(v) for s in steps for v in s) else check_schedule(steps)
+        pwm_mode = self.mode.currentText() == 'PWM'
+        if pwm_mode:
+            steps = [(duration, 0, 0, period) for duration, _, _, period in steps]  # Ta, Tb unused
+        problem = ('Schedule has an empty cell.' if any(math.isnan(v) for s in steps for v in s)
+                   else check_schedule(steps, pwm_mode))
+        if pwm_mode and abs(self.ua.value()) + self.ub.value() > 255:
+            problem = 'PWM mode needs |u_a| + u_b ≤ 255.'
         if problem:
             self.status.setText(problem); return
         if self.last_record is None:
@@ -273,11 +283,14 @@ class AngstromGUI(QtWidgets.QMainWindow):
         self.commands.extend([f'MODE {self.mode.currentText()}',
                               f'GAINS {self.kp.value():.3f} {self.ki.value():.4f}',
                               f'RATIO {self.ratio.value():.3f}', f'LIMIT {self.pwm_limit.value()}', 'CLEAR'])
+        if pwm_mode:
+            self.commands.append(f'WAVE {self.ua.value()} {self.ub.value()}')
         self.commands.extend('STEP {:g} {:g} {:g} {:g}'.format(*step) for step in steps)
         self.commands.append('HOLD ON' if self.hold.isChecked() else 'HOLD OFF')
         self.commands.append('START')
         self.note_event(f'GUI start request: mode {self.mode.currentText()}, Kp {self.kp.value():g}, '
-                        f'Ki {self.ki.value():g}, r {self.ratio.value():g}, schedule {steps}')
+                        f'Ki {self.ki.value():g}, r {self.ratio.value():g}, schedule {steps}'
+                        + (f', u_a {self.ua.value()}, u_b {self.ub.value()}' if pwm_mode else ''))
         self.status.setText('Sending schedule…')
 
     def stop_run(self):
@@ -451,6 +464,8 @@ if __name__ == '__main__':
     parser.add_argument('--kp', type=float, help='Preset Kp (PWM/°C)')
     parser.add_argument('--ki', type=float, help='Preset Ki (PWM/°C/s)')
     parser.add_argument('--ratio', type=float, help='Preset cooling ratio r = chi_h/chi_c')
+    parser.add_argument('--ua', type=int, help='PWM mode offset u_a (counts)')
+    parser.add_argument('--ub', type=int, help='PWM mode amplitude u_b (counts)')
     parser.add_argument('--schedule', help='Steps "duration,Ta,Tb,period;..."')
     parser.add_argument('--window', type=int, help='Preset plot window (s)')
     parser.add_argument('--start', action='store_true', help='Send the schedule and START once telemetry is up')
@@ -462,6 +477,8 @@ if __name__ == '__main__':
     if args.kp is not None: gui.kp.setValue(args.kp)
     if args.ki is not None: gui.ki.setValue(args.ki)
     if args.ratio is not None: gui.ratio.setValue(args.ratio)
+    if args.ua is not None: gui.ua.setValue(args.ua)
+    if args.ub is not None: gui.ub.setValue(args.ub)
     if args.window: gui.window.setValue(args.window)
     if args.schedule: gui.set_schedule(parse_schedule(args.schedule))
     if args.hold:

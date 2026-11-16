@@ -36,6 +36,7 @@ struct SerialT{
   void print(unsigned long v){out+=std::to_string(v);}
   void print(float v,int d){char b[40];snprintf(b,40,"%.*f",d,v);out+=b;}
   void println(const __FlashStringHelper*s){print(s);out+="\n";}
+  void println(){out+="\n";}
   void println(const char*s){print(s);out+="\n";}
   void println(int v){print(v);out+="\n";}
   void println(float v,int d){print(v,d);out+="\n";}

@@ -109,6 +109,30 @@ int main(){
   cmd("START"); pump(2); cmd("NEXT"); pump(1.5); cmd("NEXT"); pump(1.5);
   check(state()=="DONE"&&heat==0&&cool==0,"NEXT on the last step ends DONE with zero output");
   cmd("NEXT"); pump(1.5); check(state()=="DONE","NEXT while idle is rejected, not started");
+  // PWM mode (lab-09 Stage 2): raw u = ua + ub sin(phase), no feedback, no cooling multiplier.
+  T[A1]=25; T[A5]=25; frozen=false; cmd("HOLD OFF"); pump(1);
+  events.clear(); cmd("CLEAR"); cmd("MODE PWM"); cmd("WAVE 0 300"); cmd("WAVE 100 200"); pump(1);
+  int rejw=0; for(auto&e:events) if(e.find("REJECT,wave")!=std::string::npos) rejw++;
+  check(rejw==2,"WAVE rejects |ua|+ub > 255");
+  cmd("WAVE 0 50"); cmd("RATIO 2.83"); cmd("STEP 300 0 0 300"); pump(1);
+  check(stepCount==1,"PWM mode accepts a step with Ta = Tb = 0");
+  cmd("START"); double maxDev=0; int minP=0; maxP=0; bool sawCool=false; std::string recMode;
+  for(int i=0;i<440;i++){ pump(0.68); auto rr=f(lastRec); if(rr[1]!="RUN")break; recMode=rr[2];
+    double ph=0, u=atof(rr[8].c_str()); int p=atoi(rr.back().c_str()); maxDev=fmax(maxDev,fabs(p-u)); minP=std::min(minP,p); maxP=std::max(maxP,p);
+    if(p<0&&cool==-p&&heat==0) sawCool=true; }
+  printf("     PWM mode: signed PWM %d..%d, max |applied - command| %.2f\n",minP,maxP,maxDev);
+  check(recMode=="PWM","record shows control_mode PWM");
+  check(maxP==50&&minP==-50,"PWM swings exactly +/-50 (no r on the cooling side)");
+  check(maxDev<=0.51,"applied PWM equals ua + ub sin, rounded");
+  check(sawCool,"negative PWM drives the COOL pin only");
+  check(state()=="DONE"&&heat==0&&cool==0,"PWM run ends DONE with zero output");
+  frozen=true; T[A1]=40; T[A5]=35; cmd("WAVE 120 50"); cmd("CLEAR"); cmd("STEP 200 0 0 100"); pump(1); cmd("START"); minP=999;
+  for(int i=0;i<50;i++){ pump(0.68); minP=std::min(minP,pwm()); }
+  check(minP>=70&&state()=="RUN","positive-only wave stays positive (ua - ub = 70)");
+  T[A5]=56.5; pump(2); check(state()=="ROD_LIMIT"&&heat==0&&cool==0,"rod-base limit still stops PWM mode");
+  frozen=false; T[A5]=25;
+  cmd("MODE PI"); cmd("START"); pump(1.5);
+  check(state()!="RUN"&&heat==0,"PI refuses a step with Ta = Tb = 0 (temperature checks at START)");
   check(overlap==0,"HEAT and COOL never on together (whole test)");
   printf("\n%d failure(s)\n",fails); return fails;
 }

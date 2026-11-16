@@ -24,6 +24,14 @@ Open [module_08_angstrom_controller.ino](module_08_angstrom_controller/module_08
 - **Live:** the GUI shows this after every cycle. Tick **Hold period until Next** (or launch with `--hold`); when it reads **READY**, press **Next period →**. Arduino commands: `HOLD ON|OFF`, `NEXT` (phase stays continuous; the last step ends the run at zero output).
 - **Offline:** `python code/module8/settle_check.py RUN.csv` prints the same test per period and fits the retained cycles.
 
+## PWM mode (lab-09 Stage 2, S18.3–S18.4)
+
+Raw, uncompensated sinusoidal PWM with no feedback: u(t) = u_a + u_b sin(ωt), −255 ≤ u ≤ 255, and no cooling multiplier. Commands: `MODE PWM`, `WAVE <u_a> <u_b>`, then `STEP <dur> 0 0 <period>`. The command is logged in `feedforward_pwm`; setpoint, Ta, Tb and the ratio are `nan`. All safety stops are unchanged.
+
+```bash
+/opt/anaconda3/envs/phys39a/bin/python code/module8/module_08_angstrom_gui.py --label s18_3_zero_300 --mode PWM --ua 0 --ub 50 --schedule "2400,0,0,300" --start
+```
+
 ## Record format
 
 ```text

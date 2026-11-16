@@ -5,12 +5,14 @@
 //
 // Commands (one per line). A malformed command stops the run with output zero.
 //   PING                        heartbeat; a run stops if none arrives for 2 s
-//   MODE OPEN|P|PI              select control mode (not during a run)
+//   MODE OPEN|P|PI|PWM          select control mode (not during a run)
+//   WAVE <ua> <ub>              PWM mode drive u = ua + ub sin(phase), counts (not during a run)
 //   GAINS <Kp> <Ki>             PWM/C and PWM/(C s) (not during a run)
 //   RATIO <r>                   cooling multiplier r = chi_h/chi_c (not during a run)
 //   LIMIT <pwm>                 PWM saturation, 1-255 (not during a run)
 //   CLEAR                       empty the schedule (not during a run)
 //   STEP <dur_s> <Ta> <Tb> <period_s>   append a schedule step (not during a run)
+//                               (PWM mode ignores Ta and Tb; send 0 0)
 //   START                       begin the schedule
 //   STOP                        end the run, output zero
 //   HOLD ON|OFF                 while on, the current step does not end by elapsed time
@@ -19,7 +21,9 @@
 // Every record has 18 fields (header printed at startup). "nan" is the placeholder
 // for fields that do not apply. Other lines start with EVENT.
 //   run_state: IDLE RUN DONE STOPPED SHUTDOWN SENSOR_FAULT ROD_LIMIT TIMEOUT
-//   control_mode: OPEN P PI
+//   control_mode: OPEN P PI PWM
+//   PWM mode (lab-09 Stage 2) is raw, uncompensated sinusoidal PWM: no feedback, no r.
+//   Its command is reported in feedforward_pwm; setpoint, Ta, Tb and the ratio are nan.
 //   T1_C..T5_C are the rod sensors in hole order; T5_C is the sensor with wire tag T6.
 #include <Arduino.h>
 #include <math.h>
@@ -53,7 +57,7 @@ const float FF_TEMP[FF_POINTS] = {10.05, 13.365, 16.415, 19.575, 21.965, 28.14, 
 const float FF_PWM[FF_POINTS] = {-63, -47, -31, -13, 0, 11, 21, 32, 43, 63.7};
 
 enum RunState { IDLE, RUNNING, DONE, STOPPED, SHUTDOWN, SENSOR_FAULT, ROD_LIMIT, TIMED_OUT };
-enum ControlMode { MODE_OPEN, MODE_P, MODE_PI };
+enum ControlMode { MODE_OPEN, MODE_P, MODE_PI, MODE_PWM };
 struct Step { float duration; float ta; float tb; float period; };
 
 RunState runState = IDLE;
@@ -65,6 +69,8 @@ float kp = 16.0;
 float ki = 0.5;
 float ratioR = 2.83;  // Module 4 fit, chi_h/chi_c.
 int pwmLimit = 255;
+float waveUa = 0.0;   // PWM mode offset, counts
+float waveUb = 50.0;  // PWM mode amplitude, counts (lab-09 S18.3 initial value)
 
 float phase = 0.0;
 float stepElapsed = 0.0;
@@ -120,6 +126,7 @@ const char *stateName() {
 
 const char *modeName() {
   if (controlMode == MODE_OPEN) return "OPEN";
+  if (controlMode == MODE_PWM) return "PWM";
   return controlMode == MODE_P ? "P" : "PI";
 }
 
@@ -210,7 +217,13 @@ void updateControl(float tecC, unsigned long nowMs) {
   setpointC = step.ta + step.tb * sin(phase);
 
   float command;
-  if (controlMode == MODE_OPEN) {
+  if (controlMode == MODE_PWM) {
+    // Raw sinusoidal PWM: the sign selects HEAT or COOL; no feedback and no cooling multiplier.
+    setpointC = NAN;
+    feedforwardPwm = waveUa + waveUb * sin(phase);
+    controllerPwm = NAN;
+    command = feedforwardPwm;
+  } else if (controlMode == MODE_OPEN) {
     feedforwardPwm = feedforwardFor(setpointC);
     controllerPwm = NAN;
     command = feedforwardPwm;
@@ -256,6 +269,15 @@ bool readFloats(const char *text, float values[], byte count) {
 
 void startRun() {
   if (stepCount == 0) { reject(F("no schedule")); return; }
+  // Steps added in PWM mode skip the temperature checks, so recheck them for the other modes.
+  if (controlMode != MODE_PWM) {
+    for (byte i = 0; i < stepCount; ++i) {
+      if (steps[i].ta + steps[i].tb > ROD_BASE_LIMIT_C || steps[i].ta - steps[i].tb < MIN_SETPOINT_C) {
+        reject(F("step limits"));
+        return;
+      }
+    }
+  }
   if (runState == SHUTDOWN || runState == SENSOR_FAULT) { reject(F("TEC not safe")); return; }
   runState = RUNNING;
   currentStep = 0;
@@ -269,7 +291,11 @@ void startRun() {
   Serial.print(kp, 3); Serial.print(',');
   Serial.print(ki, 4); Serial.print(',');
   Serial.print(ratioR, 3); Serial.print(',');
-  Serial.println(pwmLimit);
+  Serial.print(pwmLimit);
+  if (controlMode == MODE_PWM) {
+    Serial.print(F(",WAVE,")); Serial.print(waveUa, 1); Serial.print(','); Serial.print(waveUb, 1);
+  }
+  Serial.println();
   printStepEvent();
 }
 
@@ -314,6 +340,11 @@ void processCommand() {
     controlMode = MODE_P;
   } else if (strcmp(commandBuffer, "MODE PI") == 0) {
     controlMode = MODE_PI;
+  } else if (strcmp(commandBuffer, "MODE PWM") == 0) {
+    controlMode = MODE_PWM;
+  } else if (strncmp(commandBuffer, "WAVE ", 5) == 0) {
+    if (!readFloats(commandBuffer + 5, v, 2) || v[1] < 0 || fabs(v[0]) + v[1] > 255) { reject(F("wave")); return; }
+    waveUa = v[0]; waveUb = v[1];
   } else if (strncmp(commandBuffer, "GAINS ", 6) == 0) {
     if (!readFloats(commandBuffer + 6, v, 2) || v[0] < 0 || v[1] < 0) { reject(F("gains")); return; }
     kp = v[0]; ki = v[1];
@@ -326,8 +357,9 @@ void processCommand() {
   } else if (strncmp(commandBuffer, "STEP ", 5) == 0) {
     if (!readFloats(commandBuffer + 5, v, 4)) { reject(F("step format")); return; }
     if (stepCount >= MAX_STEPS) { reject(F("too many steps")); return; }
-    if (v[0] <= 0 || v[2] < 0 || v[3] < MIN_PERIOD_S ||
-        v[1] + v[2] > ROD_BASE_LIMIT_C || v[1] - v[2] < MIN_SETPOINT_C) {
+    bool temperaturesOk = controlMode == MODE_PWM ||
+        (v[1] + v[2] <= ROD_BASE_LIMIT_C && v[1] - v[2] >= MIN_SETPOINT_C);
+    if (v[0] <= 0 || v[2] < 0 || v[3] < MIN_PERIOD_S || !temperaturesOk) {
       reject(F("step limits"));
       return;
     }
@@ -386,8 +418,9 @@ void report(const float temperatures[], unsigned long acquisitionMs) {
   Serial.print(stateName()); Serial.print(',');
   Serial.print(modeName()); Serial.print(',');
   Serial.print(active ? currentStep + 1 : 0); Serial.print(',');
-  printValue(active ? step.ta : NAN, 2); Serial.print(',');
-  printValue(active ? step.tb : NAN, 2); Serial.print(',');
+  bool pwmMode = controlMode == MODE_PWM;
+  printValue(active && !pwmMode ? step.ta : NAN, 2); Serial.print(',');
+  printValue(active && !pwmMode ? step.tb : NAN, 2); Serial.print(',');
   printValue(active ? step.period : NAN, 1); Serial.print(',');
   printValue(setpointC, 3); Serial.print(',');
   printValue(feedforwardPwm, 2); Serial.print(',');
@@ -395,7 +428,7 @@ void report(const float temperatures[], unsigned long acquisitionMs) {
     printValue(temperatures[channel], 2); Serial.print(',');
   }
   printValue(controllerPwm, 2); Serial.print(',');
-  printValue(active && controlMode != MODE_OPEN ? ratioR : NAN, 3); Serial.print(',');
+  printValue(active && (controlMode == MODE_P || controlMode == MODE_PI) ? ratioR : NAN, 3); Serial.print(',');
   Serial.println(signedPwm);
 }
 
