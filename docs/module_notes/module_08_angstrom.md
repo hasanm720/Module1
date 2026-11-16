@@ -171,3 +171,18 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
 - Room temperature **22 °C** (user's measurement). All six sensors read 22.0–22.3 °C before the start.
 - New sketch with `MODE PWM` uploaded and checked on the board. The board's port is now `/dev/cu.usbmodem1101`.
 - **Run 1:** u_a = 0, u_b = 50, period 300 s, 8 cycles (2400 s). File: `data/module_08/angstrom_raw_s18_3_zero_300_20261116_100920.csv`.
+- **Run 2:** 200 s, 6 cycles: `data/module_08/angstrom_raw_s18_3_zero_200_20261116_104018.csv` (ended DONE).
+- **Run 3:** 100 s, 8 cycles: `data/module_08/angstrom_raw_s18_3_zero_100_20261116_110514.csv` (ended DONE).
+- Run 1 (300 s) was shortened to 6 cycles; the TEC cycle was already repeating after cycle 3.
+
+**S18.3 table** (room 22 °C; fit of the last 3 complete cycles; `code/module8/s18_3_analysis.py`; figure `docs/figures/module_08/s18_3_zero_centered_pwm.png`):
+
+| Period (s) | (1) Mean minus room (°C) | (2) Amplitude (°C) | (3) Phase lag behind PWM (°) | Residual amplitude (°C) |
+|---|---|---|---|---|
+| 300 | 5.43 | 9.07 | 50.4 | 1.19 |
+| 200 | 5.56 | 7.07 | 59.3 | 0.93 |
+| 100 | 5.81 | 4.24 | 71.4 | 0.54 |
+
+- The mean sits about 5.5 °C above room even though the PWM averages zero. Heating is stronger than cooling (χh > χc), so the "absolute-value" term in the page's decomposition shifts the mean up.
+- Faster drive gives a smaller amplitude and a larger lag, as the one-lump low-pass model predicts. tan(lag)/ω gives τ_th ≈ 57 s (300 s), 54 s (200 s), 47 s (100 s).
+- The TEC waveform is lopsided: tall, narrow peaks and flat troughs. The residual is largest at 300 s.
