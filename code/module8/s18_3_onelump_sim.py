@@ -25,10 +25,15 @@ TAU, CHI_H, UA = 80.0, 0.46, 0.0
 H, CHART_DT = 0.01, 0.25
 
 
-def simulate(period, chi_c, ub):
+# Cycles run in the S18.3 experiment (Nov 16), so the model figure covers the same time.
+EXPERIMENT_CYCLES = {300: 6, 200: 6, 100: 8}
+
+
+def simulate(period, chi_c, ub, t_end=None):
     pwm = lambda t: max(-255.0, min(255.0, UA + ub*math.sin(2*math.pi*t/period)))
     f = lambda t, T: (ROOM + (CHI_H if pwm(t) >= 0 else chi_c)*pwm(t) - T)/TAU
-    t_end = (math.ceil(5*TAU/period) + 2)*period  # two complete cycles after 5 tau
+    if t_end is None:
+        t_end = (math.ceil(5*TAU/period) + 2)*period  # two complete cycles after 5 tau
     n = int(round(t_end/H))
     every = int(round(CHART_DT/H))
     T, t = INITIAL, 0.0
@@ -63,7 +68,6 @@ def settled(ts, Ts, period):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--ub', type=float, default=50.0, help='Selected PWM amplitude (counts)')
-    parser.add_argument('--plot-period', type=float, default=100.0, help='Common period for the aligned plots')
     args = parser.parse_args()
     print(f'One-lump model: room = initial = {ROOM} °C, tau = {TAU:g} s, chi_h = {CHI_H}, u_a = {UA:g}, u_b = {args.ub:g}')
     print('| Period (s) | chi_c (°C/PWM) | (1) Mean minus room (°C) | (2) Amplitude (°C) | (3) Phase lag (°) | (4) Residual amplitude (°C) |')
@@ -82,20 +86,30 @@ def main():
         print(f'  analytical (chi_c = chi_h), {period} s: amplitude {CHI_H*args.ub/math.sqrt(1 + wt*wt):.3f} °C, '
               f'lag {math.degrees(math.atan(wt)):.1f}°')
 
-    P = args.plot_period
-    fig, axes = plt.subplots(3, 1, figsize=(9, 8), sharex=True)
-    for chi_c, color in ((0.23, '#d62728'), (0.46, '#1f77b4')):
-        r = keep[(P, chi_c)]
-        x = (r['tt'] - r['start'])/P
-        axes[0].plot(x, r['pwm'], color=color, label=f'χc = {chi_c}')
-        axes[1].plot(x, r['temp'], color=color, label=f'T, χc = {chi_c}')
-        axes[1].plot(x, r['fitted'], '--', color=color, lw=1, label=f'mean + fundamental, χc = {chi_c}')
-        axes[2].plot(x, r['resid'], color=color, label=f'residual, χc = {chi_c}')
-    axes[0].set_ylabel('PWM (counts)'); axes[1].set_ylabel('TEC (°C)'); axes[2].set_ylabel('Residual (°C)')
-    axes[2].set_xlabel('fraction of one settled cycle')
-    for ax in axes:
-        ax.grid(alpha=.3); ax.legend(fontsize=8)
-    axes[0].set_title(f'S18.3 one-lump model, settled cycle at {P:g} s (χh = {CHI_H}, τ = {TAU:g} s, u_b = {args.ub:g})')
+    # Same layout and length as the experiment figure: one column per period, from t = 0.
+    periods = (300, 200, 100)
+    fig, axes = plt.subplots(3, 3, figsize=(16.5, 9), sharex='col')
+    for col, period in enumerate(periods):
+        t_end = EXPERIMENT_CYCLES[period]*period
+        for chi_c, color in ((0.23, '#d62728'), (0.46, '#1f77b4')):
+            ts, Ts, pwm = simulate(period, chi_c, args.ub, t_end)
+            r = settled(ts, Ts, period)  # last complete cycle of this length
+            axes[0, col].plot(ts, Ts, color=color, lw=1.6, label=f'model T, χc = {chi_c}')
+            axes[2, col].plot(r['tt'], r['resid'], color=color, lw=1.4, label=f'residual, χc = {chi_c}')
+            if chi_c == 0.23:
+                axes[1, col].plot(ts, [pwm(t) for t in ts], color='#555', lw=1.2, label='PWM (same for both)')
+        axes[0, col].axhline(ROOM, color='#888', ls=':', lw=1)
+        axes[0, col].set_title(f'{period} s, {EXPERIMENT_CYCLES[period]} cycles (as run)')
+        axes[1, col].axhline(0, color='#888', lw=.8)
+        axes[2, col].set_xlabel('time since start (s)')
+        for ax in axes[:, col]:
+            ax.grid(alpha=.3)
+    axes[0, 0].set_ylabel('model TEC (°C)'); axes[1, 0].set_ylabel('PWM (counts)')
+    axes[2, 0].set_ylabel('residual, last cycle (°C)')
+    for ax in (axes[0, 0], axes[1, 0], axes[2, 0]):
+        ax.legend(fontsize=8)
+    fig.suptitle(f'S18.3 one-lump MODEL (simulation only): χh = {CHI_H}, τ = {TAU:g} s, u_b = {args.ub:g}, '
+                 f'room = start = {ROOM:g} °C, same run lengths as the experiment', fontsize=12)
     fig.tight_layout()
     out = REPO/'docs/figures/module_08/s18_3_onelump_model.png'
     fig.savefig(out, dpi=140)
