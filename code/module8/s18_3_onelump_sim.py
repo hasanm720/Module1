@@ -119,6 +119,44 @@ def main():
     out = REPO/'docs/figures/module_08/s18_3_onelump_model.png'
     fig.savefig(out, dpi=140)
     print(f'Figure: {out}')
+    derivation_check_2(args.ub)
+
+
+def analytical(t, period, ub, chi=CHI_H):
+    """Boxed S18.3 solution for chi_h = chi_c, T(0) = T_room (the simulator's dashed overlay)."""
+    w = 2*math.pi/period
+    r = w*TAU
+    amp, delta = chi*ub/math.sqrt(1 + r*r), math.atan(r)
+    c = chi*ub*r/(1 + r*r)
+    return ROOM + amp*np.sin(w*t - delta) + c*np.exp(-t/TAU)
+
+
+def derivation_check_2(ub, period=300.0):
+    """S18.3 'Check The Derivation' item 2: equal-susceptibility 300 s run, numerical vs analytical."""
+    ts, Ts, _ = simulate(period, CHI_H, ub, t_end=6*period)
+    exact = analytical(ts, period, ub)
+    r = settled(ts, Ts, period)
+    print(f'Derivation check 2 ({period:g} s, chi_c = chi_h = {CHI_H}): max |numerical - analytical| = '
+          f'{np.max(np.abs(Ts - exact)):.2e} °C over 0–{6*period:g} s')
+    fig, axes = plt.subplots(2, 2, figsize=(13, 7), sharey='row')
+    start = ts <= 2*period
+    one = (ts >= r['start']) & (ts <= r['start'] + period)
+    for col, (m, name) in enumerate(((start, 'start-up (first two cycles)'), (one, f'one settled cycle, t = {r["start"]:g}–{r["start"] + period:g} s'))):
+        axes[0, col].plot(ts[m], Ts[m], color='#1f77b4', lw=3, label='numerical (RK4, simulator method)')
+        axes[0, col].plot(ts[m], exact[m], '--', color='#ff7f0e', lw=1.8, label='analytical (boxed solution)')
+        axes[0, col].axhline(ROOM, color='#888', ls=':', lw=1)
+        axes[0, col].set_title(name); axes[0, col].grid(alpha=.3)
+        axes[1, col].plot(ts[m], Ts[m] - exact[m], color='k', lw=1.2)
+        axes[1, col].set_xlabel('time since start (s)'); axes[1, col].grid(alpha=.3)
+    trans = (exact - ROOM) - CHI_H*ub/math.sqrt(1 + (2*math.pi*TAU/period)**2)*np.sin(2*math.pi*ts/period - math.atan(2*math.pi*TAU/period))
+    axes[0, 0].plot(ts[start], ROOM + trans[start], ':', color='#2ca02c', lw=1.8, label='exponential start-up term alone')
+    axes[0, 0].legend(fontsize=8); axes[0, 0].set_ylabel('TEC (°C)'); axes[1, 0].set_ylabel('numerical − analytical (°C)')
+    fig.suptitle(f'S18.3 derivation check 2: {period:g} s, χh = χc = {CHI_H}, τ = {TAU:g} s, u_b = {ub:g}, '
+                 f'T(0) = T_room = {ROOM:g} °C', fontsize=12)
+    fig.tight_layout()
+    out = REPO/'docs/figures/module_08/s18_3_derivation_check_300s.png'
+    fig.savefig(out, dpi=140)
+    print(f'Figure: {out}')
 
 
 if __name__ == '__main__':

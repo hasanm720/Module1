@@ -221,3 +221,22 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
 ## Data removed (Nov 18, user's request)
 
 All runs from steps after S18.4 were deleted, because those steps have not been reached in page order. They will be redone in order. That covers the Nov 4 open/P/PI trials and two-period pilot, and the Nov 9–11 production runs at 200, 240/400, 500 and 100 s, plus every figure and fit made from them. The notes above that describe those runs are kept as history only. The files are still in git history at commit `df93e5b` (`git show df93e5b:data/module_08/<file>`).
+
+### S18.3 Check The Derivation
+
+**Item 1 — substitute the solution into Eq. (S18.3.1) and verify T(0) = T_room.**
+
+Let θ = T − T_room and r = ωτ_th. Eq. (S18.3.1): τ_th dθ/dt + θ = χ u_b sin(ωt).
+Trial solution: θ = A sin(ωt − δ) + C e^(−t/τ_th), with A = χ u_b / √(1 + r²), tan δ = r, and C = χ u_b r / (1 + r²).
+
+- Derivative: τ_th dθ/dt = A r cos(ωt − δ) − C e^(−t/τ_th).
+- Left side: τ_th dθ/dt + θ = A[sin(ωt − δ) + r cos(ωt − δ)] + (C − C) e^(−t/τ_th). The exponential terms cancel.
+- Using tan δ = r: sin x + r cos x = √(1 + r²) sin(x + δ). With x = ωt − δ this gives A √(1 + r²) sin(ωt) = χ u_b sin(ωt), which is the right side. ✓
+- At t = 0: θ(0) = A sin(−δ) + C = −A sin δ + C. Since sin δ = r/√(1 + r²), A sin δ = χ u_b r/(1 + r²) = C, so θ(0) = 0, i.e. **T(0) = T_room**. ✓
+- **What the exponential contributes:** the steady sinusoid alone would start at −A sin δ, below room, rather than at room. The term C e^(−t/τ_th) supplies exactly that offset at t = 0, so the start matches the initial condition. It then decays with time constant τ_th (< 1 % after 5τ_th). It only shapes the start-up and leaves the settled wave unchanged, which is why the settled readout waits 5τ.
+
+**Item 2 — equal-susceptibility 300 s run: numerical vs analytical overlay, start-up and one settled cycle.** Figure: `docs/figures/module_08/s18_3_derivation_check_300s.png` (from `code/module8/s18_3_onelump_sim.py`). Settings: χh = χc = 0.46, τ = 80 s, u_b = 50, T(0) = T_room = 22 °C. The numerical RK4 trace and the boxed solution agree to **2 × 10⁻¹³ °C** over 0–1800 s, which is computer rounding. The green curve shows the exponential term alone: it starts at C = 10.1 °C above room and is gone by about 400 s. The browser simulator's dashed overlay matched as well (user screenshot, Nov 16).
+
+### S18.3 prediction (written Nov 18, *after* the runs — not recorded beforehand as the page asks)
+
+At fixed PWM amplitude, a longer period should give a larger TEC swing and a smaller phase lag (the low-pass response of a first-order system), and unequal heating and cooling should shift the mean above room and distort the wave at 2ω. Every one of these appeared in the measurement and the model.
