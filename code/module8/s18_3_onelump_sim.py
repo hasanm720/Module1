@@ -88,20 +88,24 @@ def main():
 
     # Same layout and length as the experiment figure: one column per period, from t = 0.
     periods = (300, 200, 100)
-    fig, axes = plt.subplots(3, 3, figsize=(16.5, 9), sharex='col')
+    fig, axes = plt.subplots(3, 3, figsize=(16.5, 9))  # bottom row: its own x-axis for the last cycle
     for col, period in enumerate(periods):
         t_end = EXPERIMENT_CYCLES[period]*period
         for chi_c, color in ((0.23, '#d62728'), (0.46, '#1f77b4')):
             ts, Ts, pwm = simulate(period, chi_c, args.ub, t_end)
             r = settled(ts, Ts, period)  # last complete cycle of this length
             axes[0, col].plot(ts, Ts, color=color, lw=1.6, label=f'model T, χc = {chi_c}')
-            axes[2, col].plot(r['tt'], r['resid'], color=color, lw=1.4, label=f'residual, χc = {chi_c}')
+            axes[2, col].plot((r['tt'] - r['start'])/period, r['resid'], color=color, lw=1.4,
+                              label=f'residual, χc = {chi_c}')
             if chi_c == 0.23:
                 axes[1, col].plot(ts, [pwm(t) for t in ts], color='#555', lw=1.2, label='PWM (same for both)')
         axes[0, col].axhline(ROOM, color='#888', ls=':', lw=1)
         axes[0, col].set_title(f'{period} s, {EXPERIMENT_CYCLES[period]} cycles (as run)')
         axes[1, col].axhline(0, color='#888', lw=.8)
-        axes[2, col].set_xlabel('time since start (s)')
+        axes[1, col].set_xlabel('time since start (s)')
+        axes[0, col].sharex(axes[1, col]); axes[0, col].tick_params(labelbottom=False)
+        axes[2, col].set_xlim(0, 1)
+        axes[2, col].set_xlabel(f'fraction of the last (settled) cycle, t = {t_end - period:g}–{t_end:g} s')
         for ax in axes[:, col]:
             ax.grid(alpha=.3)
     axes[0, 0].set_ylabel('model TEC (°C)'); axes[1, 0].set_ylabel('PWM (counts)')
