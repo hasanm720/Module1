@@ -217,3 +217,7 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
 
 - **Reproduced:** the upward mean shift (5.5 vs 5.9 °C) and the 2ω residual shape (two bumps per cycle, at the same phase).
 - **Falls short:** with the measured τ the model is too slow (amplitude 27 % low, lag 10° too large). Matching the lag needs τ ≈ 43 s, but then the amplitude is 48 % too high. **No single τ fits both**, so the one-lump model is missing something; with the rod attached, heat also flows into the rod, which acts like an extra path and a second time constant. The measured residual is also about 45 % larger than the model's.
+
+## Data removed (Nov 18, user's request)
+
+All runs from steps after S18.4 were deleted, because those steps have not been reached in page order. They will be redone in order. That covers the Nov 4 open/P/PI trials and two-period pilot, and the Nov 9–11 production runs at 200, 240/400, 500 and 100 s, plus every figure and fit made from them. The notes above that describe those runs are kept as history only. The files are still in git history at commit `df93e5b` (`git show df93e5b:data/module_08/<file>`).
