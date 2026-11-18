@@ -154,8 +154,8 @@ class AngstromGUI(QtWidgets.QMainWindow):
         self.pwm_limit = QtWidgets.QSpinBox(); self.pwm_limit.setRange(1, 255); self.pwm_limit.setValue(255)
         self.window = QtWidgets.QSpinBox(); self.window.setRange(30, 14400); self.window.setValue(600)
         # PWM mode only: u(t) = u_a + u_b sin(wt), PWM counts (lab-09 S18.3-S18.4).
-        self.ua = QtWidgets.QSpinBox(); self.ua.setRange(-255, 255); self.ua.setValue(0)
-        self.ub = QtWidgets.QSpinBox(); self.ub.setRange(0, 255); self.ub.setValue(50)
+        self.ua = QtWidgets.QDoubleSpinBox(); self.ua.setDecimals(1); self.ua.setRange(-255, 255); self.ua.setValue(0)
+        self.ub = QtWidgets.QDoubleSpinBox(); self.ub.setDecimals(1); self.ub.setRange(0, 255); self.ub.setValue(50)
         for col, (label, widget) in enumerate([
                 ('Mode', self.mode), ('Kp (PWM/°C)', self.kp), ('Ki (PWM/°C/s)', self.ki),
                 ('Cooling ratio r', self.ratio), ('PWM limit', self.pwm_limit), ('Plot window (s)', self.window),
@@ -284,7 +284,7 @@ class AngstromGUI(QtWidgets.QMainWindow):
                               f'GAINS {self.kp.value():.3f} {self.ki.value():.4f}',
                               f'RATIO {self.ratio.value():.3f}', f'LIMIT {self.pwm_limit.value()}', 'CLEAR'])
         if pwm_mode:
-            self.commands.append(f'WAVE {self.ua.value()} {self.ub.value()}')
+            self.commands.append(f'WAVE {self.ua.value():.1f} {self.ub.value():.1f}')
         self.commands.extend('STEP {:g} {:g} {:g} {:g}'.format(*step) for step in steps)
         self.commands.append('HOLD ON' if self.hold.isChecked() else 'HOLD OFF')
         self.commands.append('START')
@@ -464,8 +464,8 @@ if __name__ == '__main__':
     parser.add_argument('--kp', type=float, help='Preset Kp (PWM/°C)')
     parser.add_argument('--ki', type=float, help='Preset Ki (PWM/°C/s)')
     parser.add_argument('--ratio', type=float, help='Preset cooling ratio r = chi_h/chi_c')
-    parser.add_argument('--ua', type=int, help='PWM mode offset u_a (counts)')
-    parser.add_argument('--ub', type=int, help='PWM mode amplitude u_b (counts)')
+    parser.add_argument('--ua', type=float, help='PWM mode offset u_a (counts)')
+    parser.add_argument('--ub', type=float, help='PWM mode amplitude u_b (counts)')
     parser.add_argument('--schedule', help='Steps "duration,Ta,Tb,period;..."')
     parser.add_argument('--window', type=int, help='Preset plot window (s)')
     parser.add_argument('--start', action='store_true', help='Send the schedule and START once telemetry is up')
