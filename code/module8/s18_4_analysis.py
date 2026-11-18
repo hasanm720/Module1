@@ -112,7 +112,7 @@ def main():
         for ax in axes[:, col]:
             ax.axvspan(r['t'][r['m']][0], r['t'][r['m']][-1], color='#ffd54f', alpha=.25, lw=0)
             ax.grid(alpha=.3)
-        axes[0, col].set_title(f'{r["name"]}: u = {r["ua"]:.0f} + {r["ub"]:.0f} sin ωt; amp {r["amp"]:.2f} °C, '
+        axes[0, col].set_title(f'{r["name"]}: u = {abs(round(r["ua"])):.0f} + {r["ub"]:.0f} sin ωt; amp {r["amp"]:.2f} °C, '
                                f'residual {r["res"]:.2f} °C')
         axes[1, col].set_xlabel('time since start (s)')
     axes[0, 0].set_ylabel('measured TEC (°C)'); axes[1, 0].set_ylabel('signed PWM')
