@@ -9,4 +9,4 @@
 | Zero-centered | 0 | 50 | 3.07 | 0.31 |
 | Positive-only | 34 | 30 | 2.72 | 0.01 |
 
-**Figure:** `docs/figures/module_08/s18_4_simulation.png`
+**Figure:** [s18_4_simulation.png](../../../docs/figures/module_08/s18_4_simulation.png)

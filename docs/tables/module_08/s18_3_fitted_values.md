@@ -10,6 +10,6 @@
 | 200 | 5.56 | 7.07 | 59.3 |
 | 300 | 5.43 | 9.07 | 50.4 |
 
-**Raw data:** `data/module_08/angstrom_raw_s18_3_zero_100_20261116_110514.csv`, `..._zero_200_20261116_104018.csv`, `..._zero_300_20261116_100920.csv`
-**Code:** `python code/module8/s18_3_analysis.py --room 22 <300 s> <200 s> <100 s>`
-**Figure:** `docs/figures/module_08/s18_3_zero_centered_pwm.png`
+**Raw data:** [angstrom_raw_s18_3_zero_100_20261116_110514.csv](../../../data/module_08/angstrom_raw_s18_3_zero_100_20261116_110514.csv), [angstrom_raw_s18_3_zero_200_20261116_104018.csv](../../../data/module_08/angstrom_raw_s18_3_zero_200_20261116_104018.csv), [angstrom_raw_s18_3_zero_300_20261116_100920.csv](../../../data/module_08/angstrom_raw_s18_3_zero_300_20261116_100920.csv)
+**Code:** [s18_3_analysis.py](../../../code/module8/s18_3_analysis.py) — run: `python code/module8/s18_3_analysis.py --room 22 <300 s> <200 s> <100 s>`
+**Figure:** [s18_3_zero_centered_pwm.png](../../../docs/figures/module_08/s18_3_zero_centered_pwm.png)

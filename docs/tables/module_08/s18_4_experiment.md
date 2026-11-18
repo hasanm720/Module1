@@ -12,5 +12,5 @@
 - u_b was lowered from 50 to 30 for the positive-only run (user's choice, Nov 18). With PWM kept positive and u_b = 50, the TEC mean would have been about 49 °C, not near 40 °C. The measured positive-only TEC mean was **40.27 °C**.
 - Room 22 °C (S18.3); about 23 °C from the idle sensors on Nov 18.
 
-**Raw data:** `data/module_08/angstrom_raw_s18_3_zero_100_20261116_110514.csv` (zero-centered), `data/module_08/angstrom_raw_s18_4_positive_100_20261118_101610.csv` (positive-only)
-**Figure:** `docs/figures/module_08/s18_4_experiment.png`
+**Raw data:** [angstrom_raw_s18_3_zero_100_20261116_110514.csv](../../../data/module_08/angstrom_raw_s18_3_zero_100_20261116_110514.csv) (zero-centered), [angstrom_raw_s18_4_positive_100_20261118_101610.csv](../../../data/module_08/angstrom_raw_s18_4_positive_100_20261118_101610.csv) (positive-only)
+**Figure:** [s18_4_experiment.png](../../../docs/figures/module_08/s18_4_experiment.png)

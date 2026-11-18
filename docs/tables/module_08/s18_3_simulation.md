@@ -14,5 +14,5 @@
 | 300 | 0.46 | 0.000 | 11.787 | 59.2 | 0.000 |
 
 **How it was run:** the simulator's lumped mode, reproduced from its page source (same equation, RK4 at 0.01 s, settled cycle after 5τ). The 300 s, χc = 0.46 row was checked against the browser simulator: 11.787 °C and 59.2°, an exact match.
-**Code:** `python code/module8/s18_3_onelump_sim.py --ub 50`
-**Figure:** `docs/figures/module_08/s18_3_onelump_model.png`
+**Code:** [s18_3_onelump_sim.py](../../../code/module8/s18_3_onelump_sim.py) — run: `python code/module8/s18_3_onelump_sim.py --ub 50`
+**Figure:** [s18_3_onelump_model.png](../../../docs/figures/module_08/s18_3_onelump_model.png)
