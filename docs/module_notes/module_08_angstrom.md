@@ -248,3 +248,12 @@ At fixed PWM amplitude, a longer period should give a larger TEC swing and a sma
 - **Did positive-only PWM produce a more sinusoidal temperature response? Yes.** The residual fell from 0.54 to 0.07 °C (residual/amplitude 13 % → 2 %); the model gives 0.31 → 0.01 °C (10 % → 0.3 %). Heating only means one susceptibility (χh) for the whole cycle, so the |sin| distortion term disappears.
 - **Remaining distortion:** the measured 0.07 °C is larger than the model's 0.01 °C. The one-lump model leaves out the rod, the χh nonlinearity (Module 4 local slopes 0.49–0.56) and sensor noise. The run was also still drifting +0.08 °C/min over the fit.
 - The amplitude ratio is consistent: measured 3.53 °C at u_b = 30 vs 4.24 °C at u_b = 50. Per PWM count, heating only gives a larger swing (0.118 vs 0.085 °C/count), because χh > χc.
+
+## Stage 3, S18.5: specify the setpoint and construct feedforward (Nov 18)
+
+- Setpoint: T_set(t) = 40 + 16 sin(2πt / 100 s), requested range 24–56 °C (the 56 °C rod-base limit takes precedence).
+- Inputs: χh = 0.5311 °C/PWM (Module 4), T_room = 22 °C (measured in S18.3).
+- **u_a = (T_a − T_room)/χh = (40 − 22)/0.5311 = 33.89 PWM; u_b = T_b/χh = 16/0.5311 = 30.13 PWM.**
+- u(t) = 33.89 + 30.13 sin(ωt) runs from **+3.77 to +64.02 PWM**: entirely on the heating branch (u > 0) and well within ±255.
+- Steady-state calibration predicts a TEC mean of 40.00 °C and an oscillation amplitude of 16.00 °C.
+- Figure (plotted before applying, as the page asks): [s18_5_feedforward_command.png](../figures/module_08/s18_5_feedforward_command.png). Code: [s18_5_6_feedforward.py](../../code/module8/s18_5_6_feedforward.py) `--feedforward`.
