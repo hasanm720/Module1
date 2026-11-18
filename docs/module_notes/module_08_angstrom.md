@@ -240,3 +240,11 @@ Trial solution: θ = A sin(ωt − δ) + C e^(−t/τ_th), with A = χ u_b / √
 ### S18.3 prediction (written Nov 18, *after* the runs — not recorded beforehand as the page asks)
 
 At fixed PWM amplitude, a longer period should give a larger TEC swing and a smaller phase lag (the low-pass response of a first-order system), and unequal heating and cooling should shift the mean above room and distort the wave at 2ω. Every one of these appeared in the measurement and the model.
+
+## Stage 2, S18.4: positive-only sinusoidal PWM (Nov 18)
+
+- Run: u = 34 + 30 sin(ωt), 100 s period, 8 cycles (800 s), ended DONE. PWM stayed at +4 to +64 (positive, unclipped). File: `data/module_08/angstrom_raw_s18_4_positive_100_20261118_101610.csv`. Room ≈ 23 °C (idle sensors).
+- Tables: `docs/tables/module_08/s18_4_experiment.md` and `s18_4_simulation.md`. Figures: `docs/figures/module_08/s18_4_experiment.png` and `s18_4_simulation.png`.
+- **Did positive-only PWM produce a more sinusoidal temperature response? Yes.** The residual fell from 0.54 to 0.07 °C (residual/amplitude 13 % → 2 %); the model gives 0.31 → 0.01 °C (10 % → 0.3 %). Heating only means one susceptibility (χh) for the whole cycle, so the |sin| distortion term disappears.
+- **Remaining distortion:** the measured 0.07 °C is larger than the model's 0.01 °C. The one-lump model leaves out the rod, the χh nonlinearity (Module 4 local slopes 0.49–0.56) and sensor noise. The run was also still drifting +0.08 °C/min over the fit.
+- The amplitude ratio is consistent: measured 3.53 °C at u_b = 30 vs 4.24 °C at u_b = 50. Per PWM count, heating only gives a larger swing (0.118 vs 0.085 °C/count), because χh > χc.
