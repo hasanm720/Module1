@@ -257,3 +257,14 @@ At fixed PWM amplitude, a longer period should give a larger TEC swing and a sma
 - u(t) = 33.89 + 30.13 sin(ωt) runs from **+3.77 to +64.02 PWM**: entirely on the heating branch (u > 0) and well within ±255.
 - Steady-state calibration predicts a TEC mean of 40.00 °C and an oscillation amplitude of 16.00 °C.
 - Figure (plotted before applying, as the page asks): [s18_5_feedforward_command.png](../figures/module_08/s18_5_feedforward_command.png). Code: [s18_5_6_feedforward.py](../../code/module8/s18_5_6_feedforward.py) `--feedforward`.
+
+## Stage 3, S18.6: apply the feedforward command (Nov 18)
+
+- Run: [angstrom_raw_s18_6_feedforward_100_20261118_110221.csv](../../data/module_08/angstrom_raw_s18_6_feedforward_100_20261118_110221.csv). u = 33.9 + 30.1 sin(ωt), 100 s period, 10 cycles (1000 s), no feedback, ended DONE. The rod started at about 24 °C.
+- Table: [s18_6_feedforward.md](../tables/module_08/s18_6_feedforward.md). Figure: [s18_6_feedforward_response.png](../figures/module_08/s18_6_feedforward_response.png). Code: [s18_5_6_feedforward.py](../../code/module8/s18_5_6_feedforward.py) `--s18-6`.
+- **Mean:** measured 41.49 °C vs predicted 40.00 °C (1.5 °C high; still drifting +0.04 °C/min, and the χh line is only approximate at these temperatures).
+- **Amplitude:** measured 3.67 °C vs predicted 16.00 °C, which is only 23 % of the request. The steady-state calibration ignores the TEC's thermal lag: at 100 s the TEC cannot follow, the same low-pass effect seen in S18.3.
+- **Phase lag:** the TEC lags the setpoint by **71.4°** (≈ 20 s).
+- **T1 (rod-base boundary):** mean 37.97 °C, amplitude 1.36 °C, lag 113° behind the setpoint, so it is sinusoidal but much smaller and later still.
+- The TEC residual (0.48 °C) is inflated by short bursts of thermistor noise on the TEC channel (around t ≈ 400 s and 950–1000 s); T1's residual is 0.15 °C. The waveform itself is sinusoidal, as in S18.4.
+- **Answer to the page's closing question:** the mean is close (within 1.5 °C), but the amplitude is far too small and about 71° of lag remains. Feedforward alone cannot produce the requested boundary at 100 s, which motivates the feedback trials in S18.7.

@@ -1,11 +1,17 @@
 """Lab-09 S18.5-S18.6: feedforward PWM command from the measured heating slope.
 
     python code/module8/s18_5_6_feedforward.py --feedforward
+    python code/module8/s18_5_6_feedforward.py --s18-6 RUN.csv [--cycles 3]
 
 S18.5: T_set(t) = T_a + T_b sin(wt). Feedforward offset and amplitude from the Module 4 heating slope
 chi_h and the room temperature measured in S18.3:  u_a = (T_a - T_room)/chi_h,  u_b = T_b/chi_h.
 Plots T_set(t) and u(t) = u_a + u_b sin(wt) on aligned time axes before the command is applied, and
 checks that u stays on the heating branch (u > 0) and within the allowed range (|u| <= 255).
+
+S18.6: the command applied with no feedback. Common time fit (mean + drift + fundamental) of the last
+--cycles complete cycles of the TEC and T1; T_set(t) is rebuilt from the logged PWM, which shares its
+phase (both use sin of the same running phase). Reports the S18.6 table and plots TEC and T_set on one
+time axis, with T1.
 """
 import argparse
 import math
@@ -15,6 +21,10 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from s18_4_analysis import load, fit_run
 
 REPO = Path(__file__).resolve().parents[2]
 CHI_H = 0.5311      # °C/PWM, Module 4 heating fit
@@ -63,12 +73,56 @@ def plot_feedforward():
     print(f'Figure: {out}')
 
 
+def analyse_s18_6(path, cycles):
+    u_a, u_b = feedforward()
+    period, t, tec, pwm = load(path)
+    rows_t1 = __import__('csv').DictReader(open(path))
+    t1 = np.array([float(r['T1_C']) for r in rows_t1 if r['run_state'] == 'RUN'])
+    f_tec, f_t1 = fit_run(t, tec, pwm, period, cycles), fit_run(t, t1, pwm, period, cycles)
+    w = 2*math.pi/period
+    m = f_tec['m']
+    # Phase of TEC and T1 relative to the PWM (= setpoint phase), from the same windowed fit.
+    def lag(y):
+        A = np.column_stack([np.ones(m.sum()), t[m] - t[m].mean(), np.cos(w*t[m]), np.sin(w*t[m])])
+        c = np.linalg.lstsq(A, y[m], rcond=None)[0]
+        cu = np.linalg.lstsq(A, pwm[m], rcond=None)[0]
+        return math.degrees((math.atan2(-cu[3], cu[2]) - math.atan2(-c[3], c[2])) % (2*math.pi))
+    lag_tec, lag_t1 = lag(tec), lag(t1)
+    t_set = T_A + T_B*(pwm - u_a)/u_b
+    print(f'{path.name}: fit of the last {cycles} complete cycles (TEC drift {f_tec["drift"]:+.3f} °C/min)')
+    print('| 100 s case | u_a (PWM) | u_b (PWM) | Mean TEC temperature (°C) | Oscillation amplitude (°C) | Phase lag relative to setpoint (°) |')
+    print('|---|---|---|---|---|---|')
+    print(f'| S18.5 steady-state prediction | {u_a:.1f} | {u_b:.1f} | {T_ROOM + CHI_H*u_a:.2f} | {CHI_H*u_b:.2f} | 0 |')
+    print(f'| S18.6 measured response | {f_tec["ua"]:.1f} | {f_tec["ub"]:.1f} | {f_tec["mean"]:.2f} | {f_tec["amp"]:.2f} | {lag_tec:.1f} |')
+    print(f'T1 (rod base, x = 0): mean {f_t1["mean"]:.2f} °C, amplitude {f_t1["amp"]:.2f} °C, lag {lag_t1:.1f}° behind setpoint, '
+          f'residual {f_t1["res"]:.3f} °C; TEC residual {f_tec["res"]:.3f} °C')
+
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(11, 7), sharex=True, height_ratios=[2.2, 1])
+    a1.plot(t, t_set, '--', color='#7f7f7f', lw=2, label='requested T_set(t)')
+    a1.plot(t, tec, color='k', lw=2, label='measured TEC')
+    a1.plot(t, t1, color='#1f77b4', lw=1.6, label='measured T1 (rod base, x = 0)')
+    a1.axvspan(t[m][0], t[m][-1], color='#ffd54f', alpha=.25, lw=0, label='fitted cycles')
+    a1.set_ylabel('temperature (°C)'); a1.grid(alpha=.3); a1.legend(fontsize=8, ncol=2, loc='lower right')
+    a1.set_title(f'S18.6 feedforward, no feedback: TEC mean {f_tec["mean"]:.1f} °C (pred. 40.0), amplitude '
+                 f'{f_tec["amp"]:.1f} °C (pred. 16.0), lag {lag_tec:.0f}°')
+    a2.plot(t, pwm, color='#d62728', lw=1.5); a2.axhline(0, color='#888', lw=.8)
+    a2.set_ylabel('applied PWM'); a2.set_xlabel('time since start (s)'); a2.grid(alpha=.3)
+    fig.tight_layout()
+    out = REPO/'docs/figures/module_08/s18_6_feedforward_response.png'
+    fig.savefig(out, dpi=140)
+    print(f'Figure: {out}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--feedforward', action='store_true', help='S18.5: compute and plot the command')
+    parser.add_argument('--s18-6', type=Path, help='S18.6: analyse the applied feedforward run')
+    parser.add_argument('--cycles', type=int, default=3)
     args = parser.parse_args()
     if args.feedforward:
         plot_feedforward()
+    elif args.s18_6:
+        analyse_s18_6(args.s18_6, args.cycles)
     else:
         parser.print_help()
 
