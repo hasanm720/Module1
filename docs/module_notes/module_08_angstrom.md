@@ -203,3 +203,17 @@ File: `data/module_08/angstrom_raw_production_500_20261111_092817.csv`. HOLD/NEX
 - **Fixed χc, longer period:** larger amplitude and smaller lag; the mean shift is unchanged.
 - **Against our measurement:** measured mean − room 5.4–5.8 °C, consistent with our χh − χc = 0.53 − 0.19 = 0.34 → 25 × 0.34 × 2/π ≈ 5.4 °C. Measured lags (50/59/71°) are about 8–9° smaller than the τ = 80 s model, which implies τ_th ≈ 50–57 s.
 - Aligned plot of both χ settings at 100 s: `docs/figures/module_08/s18_3_onelump_model.png`.
+
+**S18.3 "Compare The Simulation With Your Measurements"** (`code/module8/s18_3_model_vs_experiment.py`; figure `docs/figures/module_08/s18_3_model_vs_experiment_100s.png`)
+
+- **Fixed PWM amplitude, three periods:** the temperature amplitude was **not** the same: 9.07 / 7.07 / 4.24 °C at 300 / 200 / 100 s.
+- **100 s overlay** with our measured values: χh = 0.5311, χc = 0.1878 (Module 4), τ = 91.69 s (Module 6), room 22 °C, initial 22.81 °C, u_b = 50. Settled cycle t = 600–700 s.
+
+| | Mean − room (°C) | Fundamental amplitude (°C) | Lag behind PWM (°) | Residual amplitude (°C) |
+|---|---|---|---|---|
+| Measured | 5.92 | 4.23 | 69.9 | 0.45 |
+| Model, τ = 91.69 s | 5.46 | 3.07 | 80.2 | 0.31 |
+| Model, τ = 43 s (best lag match, extra) | 5.46 | 6.24 | 69.7 | 0.66 |
+
+- **Reproduced:** the upward mean shift (5.5 vs 5.9 °C) and the 2ω residual shape (two bumps per cycle, at the same phase).
+- **Falls short:** with the measured τ the model is too slow (amplitude 27 % low, lag 10° too large). Matching the lag needs τ ≈ 43 s, but then the amplitude is 48 % too high. **No single τ fits both**, so the one-lump model is missing something; with the rod attached, heat also flows into the rod, which acts like an extra path and a second time constant. The measured residual is also about 45 % larger than the model's.
