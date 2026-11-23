@@ -268,3 +268,23 @@ At fixed PWM amplitude, a longer period should give a larger TEC swing and a sma
 - **T1 (rod-base boundary):** mean 37.97 °C, amplitude 1.36 °C, lag 113° behind the setpoint, so it is sinusoidal but much smaller and later still.
 - The TEC residual (0.48 °C) is inflated by short bursts of thermistor noise on the TEC channel (around t ≈ 400 s and 950–1000 s); T1's residual is 0.15 °C. The waveform itself is sinusoidal, as in S18.4.
 - **Answer to the page's closing question:** the mean is close (within 1.5 °C), but the amplitude is far too small and about 71° of lag remains. Feedforward alone cannot produce the requested boundary at 100 s, which motivates the feedback trials in S18.7.
+
+## Stage 3, S18.7: repeat with P and PI control (Nov 23)
+
+- Drive T_set = 40 + 16 sin(2πt/τ), the same as S18.5–S18.6. Control law as on the page, with no feedforward term: u = Kp·e (+ Ki∫e dt), negative × r = 2.83, clamp ±255, anti-windup in PI. Kp in PWM/°C, Ki in PWM/(°C·s). Controller sample interval 0.68 s (one update per six-channel record).
+- **Tolerances (team, Nov 18; reported in S18.8):** |mean − 40| ≤ 1 °C, amplitude ratio 0.90–1.10, |phase lag| ≤ 20°.
+- Runs: 100 s × 8 cycles, 200 s × 6, 300 s × 6, all ended DONE. Fit over the last 3 cycles.
+- Trial log table: [s18_7_trial_log.md](../tables/module_08/s18_7_trial_log.md). Figure: [s18_7_trials.png](../figures/module_08/s18_7_trials.png). Code: [s18_7_analysis.py](../../code/module8/s18_7_analysis.py).
+
+| Period | Trial | Kp / Ki | Mean (°C) | Ratio | Lag (°) | RMS (°C) | Meets? |
+|---|---|---|---|---|---|---|---|
+| 100 | P only | 16 / 0 | 38.10 | 0.791 | 22.2 | 4.92 | no |
+| 100 | Initial PI | 16 / 0.5 | 40.00 | 0.950 | 25.3 | 4.88 | no (lag) |
+| 100 | PI tuning | 25 / 0.5 | 40.00 | 0.944 | 17.2 | 3.35 | **yes, selected** |
+| 200 | PI, 100 s gains | 25 / 0.5 | 40.00 | 0.989 | 9.8 | 1.93 | **yes, selected** |
+| 300 | PI, 200 s gains | 25 / 0.5 | 40.00 | 1.002 | 6.5 | 1.28 | **yes, selected** |
+
+- **P → PI at the same Kp:** integral action removed the mean droop (38.1 → 40.0 °C) and raised the amplitude ratio (0.79 → 0.95); the lag did not improve.
+- **Raising Kp 16 → 25** cut the lag (25° → 17°) and the RMS error (4.9 → 3.4 °C) with the amplitude ratio unchanged.
+- Longer periods track better with the same gains (lag 17° → 10° → 6.5°), so no retuning was needed at 200 or 300 s.
+- PWM hit ±255 only during start-up (≤ 6 samples, first 3 s) and never in the settled cycles.
