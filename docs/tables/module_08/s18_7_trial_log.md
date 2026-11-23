@@ -9,5 +9,6 @@
 | Period (s) | Trial | K_p | K_i | Sample interval (s) | Mean TEC (°C) | Amplitude ratio (fitted / requested) | Phase lag (°) | RMS tracking error (°C) | PWM saturation | Run link and notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 100 | P only | 16 | 0 | 0.68 | 38.10 | 0.791 | 22.2 | 4.92 | yes: 5 samples (5 in start-up), 0–3 s | [angstrom_raw_s18_7_100_P_20261123_100206.csv](../../../data/module_08/angstrom_raw_s18_7_100_P_20261123_100206.csv); misses tolerances |
+| 100 | Initial PI | 16 | 0.5 | 0.68 | 40.00 | 0.950 | 25.3 | 4.88 | yes: 2 samples (2 in start-up), 1–2 s | [angstrom_raw_s18_7_100_PI1_20261123_102111.csv](../../../data/module_08/angstrom_raw_s18_7_100_PI1_20261123_102111.csv); misses tolerances; same Kp as P only |
 
 **Figure:** [s18_7_trials.png](../../../docs/figures/module_08/s18_7_trials.png)
