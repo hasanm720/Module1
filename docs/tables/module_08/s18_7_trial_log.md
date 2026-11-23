@@ -11,5 +11,6 @@
 | 100 | P only | 16 | 0 | 0.68 | 38.10 | 0.791 | 22.2 | 4.92 | yes: 5 samples (5 in start-up), 0–3 s | [angstrom_raw_s18_7_100_P_20261123_100206.csv](../../../data/module_08/angstrom_raw_s18_7_100_P_20261123_100206.csv); misses tolerances |
 | 100 | Initial PI | 16 | 0.5 | 0.68 | 40.00 | 0.950 | 25.3 | 4.88 | yes: 2 samples (2 in start-up), 1–2 s | [angstrom_raw_s18_7_100_PI1_20261123_102111.csv](../../../data/module_08/angstrom_raw_s18_7_100_PI1_20261123_102111.csv); misses tolerances; same Kp as P only |
 | 100 | PI tuning trial | 25 | 0.5 | 0.68 | 40.00 | 0.944 | 17.2 | 3.35 | yes: 6 samples (6 in start-up), 0–3 s | [angstrom_raw_s18_7_100_PI2_20261123_103545.csv](../../../data/module_08/angstrom_raw_s18_7_100_PI2_20261123_103545.csv); meets tolerances; **SELECTED for 100 s**; Kp raised 16→25 to cut the lag |
+| 200 | PI with selected 100 s gains | 25 | 0.5 | 0.68 | 40.00 | 0.989 | 9.8 | 1.93 | no | [angstrom_raw_s18_7_200_PI_20261123_104956.csv](../../../data/module_08/angstrom_raw_s18_7_200_PI_20261123_104956.csv); meets tolerances; **SELECTED for 200 s**; no retuning needed |
 
 **Figure:** [s18_7_trials.png](../../../docs/figures/module_08/s18_7_trials.png)
